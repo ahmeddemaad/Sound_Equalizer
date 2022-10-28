@@ -64,7 +64,6 @@ def bins_separation(frequency,magnitude_spectrum):
     return List_freq_axis,List_amplitude_axis
 
 List_freq_axis,List_amplitude_axis = bins_separation(frequency,magnitude_spectrum)
-st.write(List_freq_axis,List_amplitude_axis)
 
 
 
@@ -73,12 +72,12 @@ def bins_modification(List_freq_axis,List_amplitude_axis):
     i=0
     while(i<10):
         Amplitude=slider(i)
-        mod_List_amplitude_axis.append(List_amplitude_axis[i]+Amplitude)
+        mod_List_amplitude_axis.append(List_amplitude_axis[i]*Amplitude)
         i=i+1
     return mod_List_amplitude_axis
 
 def slider(i):
-    x = st.slider(min_value=0,max_value=20,key=i,label='saba7o')
+    x = st.slider(min_value=0,max_value=20,key=i,label='saba7o' , value=1)
     return x
 
 mod_List_amplitude_axis=bins_modification(List_freq_axis,List_amplitude_axis)
@@ -89,9 +88,14 @@ mod_List_amplitude_axis=bins_modification(List_freq_axis,List_amplitude_axis)
 mod_List_amplitude_axis=list(itertools.chain.from_iterable(mod_List_amplitude_axis))
 
 ax = plt.figure(figsize=(10, 8))
+frequency=frequency[0:len(mod_List_amplitude_axis)]
 plt.plot(frequency, mod_List_amplitude_axis, color='black')
 st.plotly_chart(ax)
 
+mod_List_amplitude_axis_time = np.fft.ifft(mod_List_amplitude_axis)
+
+hamada=ipd.Audio(mod_List_amplitude_axis_time, rate=sr)
+st.write(hamada)
 
 # st.write(result.shape)
 # st.write(result)
