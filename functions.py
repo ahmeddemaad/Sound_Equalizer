@@ -13,6 +13,7 @@ import soundfile as sf
 import scipy as sc
 from scipy.fftpack import fft
 import streamlit_vertical_slider as svs
+import cmath
 #-------------------------------------------------------------------player for audio-------------------------------------------------------------------#
 
 
@@ -37,14 +38,22 @@ def Sound_loading(file):
     #-------------------------------------------------------------------processing-------------------------------------------------------------------#
 
 
-def Fourier_operations(signal, sr, f_ratio):
-    frequency_x = np.fft.fft(signal)
-    magnitude_spectrum = np.abs(ft)
-    frequency = np.linspace(0, sr, len(magnitude_spectrum))
+def Fourier_operations(loaded_sound_file):
+    fft_file = np.fft.fft(loaded_sound_file)
+    amplitude= np.abs(fft_file)
+    phase =np.angle(fft_file)
+    # frequency=fft.fftfreq()
+    mod=np.multiply(amplitude,np.exp(1j*phase))
+    ifft_file=sc.ifft(mod)
+    return ifft_file,amplitude,phase
+
+def magnitude_spectrum_(amplitude, sr, f_ratio):
+    frequency = np.linspace(0, sr, len(amplitude))
     number_frequency_bins = int(len(frequency) * f_ratio)
     frequency = frequency[:number_frequency_bins]
-    magnitude_spectrum = magnitude_spectrum[:number_frequency_bins]
-    return frequency, magnitude_spectrum
+    amplitude = amplitude[:number_frequency_bins]
+    return frequency, amplitude
+
 
 #-------------------------------------------------------------------bins_seperation-------------------------------------------------------------------#
 

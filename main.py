@@ -28,5 +28,11 @@ with tab1:
     if Sound:
         fn.Audio_player(Sound)
         loaded_sound_file, sampling_rate = fn.Sound_loading(Sound)
+        ifft_file,amplitude,phase=fn.Fourier_operations(loaded_sound_file)
+        frequency,magnitude_spectrum= fn.magnitude_spectrum_ (amplitude,sampling_rate, 0.5 )
 
-    fn.Sliders_generation()
+
+        song=ipd.Audio(ifft_file,rate=sampling_rate)
+        st.write(song)
+
+        fn.Sliders_generation()
