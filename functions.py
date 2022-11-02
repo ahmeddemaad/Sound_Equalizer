@@ -16,7 +16,6 @@ import streamlit_vertical_slider as svs
 import cmath
 #-------------------------------------------------------------------player for audio-------------------------------------------------------------------#
 
-
 def Audio_player(file):
     st.audio(file, format="audio/wav", start_time=0)
 
@@ -42,15 +41,13 @@ def Fourier_operations(loaded_sound_file):
     fft_file = np.fft.fft(loaded_sound_file)
     amplitude= np.abs(fft_file)
     phase =np.angle(fft_file)
-    # frequency=fft.fftfreq()
-    mod=np.multiply(amplitude,np.exp(1j*phase))
-    ifft_file=sc.ifft(mod)
-    return ifft_file,amplitude,phase
+    return amplitude,phase
 
 def magnitude_spectrum_(amplitude, sr, f_ratio):
     frequency = np.linspace(0, sr, len(amplitude))
     number_frequency_bins = int(len(frequency) * f_ratio)
     frequency = frequency[:number_frequency_bins]
+    st.write(len(frequency))
     amplitude = amplitude[:number_frequency_bins]
     return frequency, amplitude
 
@@ -58,20 +55,19 @@ def magnitude_spectrum_(amplitude, sr, f_ratio):
 #-------------------------------------------------------------------bins_seperation-------------------------------------------------------------------#
 
 
-def bins_separation(frequency, magnitude_spectrum):
+def bins_separation(frequency, amplitude):
     List_freq_axis = []
     List_amplitude_axis = []
     bin_max_frequency_value = int(len(frequency)/10)
     i = 0
     while(i < 10):
         List_freq_axis.append(
-            frequency[i*bin_max_frequency_value: (i+1)*bin_max_frequency_value])
+            frequency[i*bin_max_frequency_value : (i+1)*bin_max_frequency_value])
         List_amplitude_axis.append(
-            magnitude_spectrum[i*bin_max_frequency_value:(i+1)*bin_max_frequency_value])
+            amplitude[i*bin_max_frequency_value:(i+1)*bin_max_frequency_value])
         i = i+1
     return List_freq_axis, List_amplitude_axis
 #-------------------------------------------------------------------sliders-generation-------------------------------------------------------------------#
-
 
 def Sliders_generation():
     columns = st.columns(10)
@@ -80,15 +76,30 @@ def Sliders_generation():
     for i in range(0, 10):
         with columns[i]:
             value = svs.vertical_slider(
-                key=i, default_value=0, step=1, min_value=-20, max_value=20)
+                key=i, default_value=1, step=1, min_value=-20, max_value=20)
             if value == None:
-                value = 0
+                value = 1
             sliders_data.append(value)
     return sliders_data
-    #-------------------------------------------------------------------modification-------------------------------------------------------------------#
 
+def sound_modification(sliders_data,List_amplitude_axis):
+    empty = st.empty()
+    empty.empty()
+    modified_bins=[]
+    for i in range(0,10):
+        modified_bins.append(sliders_data[i]*List_amplitude_axis[i])
+    st.write(modified_bins)
+    st.write(sliders_data)
+    mod_List_amplitude_axis=list(itertools.chain.from_iterable(modified_bins))
+    return mod_List_amplitude_axis,empty
+
+def inverse_fourier(mod_List_amplitude_axis,phase):
+    mod=np.multiply(mod_List_amplitude_axis,np.exp(1j*phase))
+    ifft_file=sc.ifft(mod)
+    return ifft_file
+    #-------------------------------------------------------------------modification-------------------------------------------------------------------#
     #     global empty
-    #     empty = st.empty()
+    #     
 
     # def bins_modification(empty, List_freq_axis, List_amplitude_axis):
     #         empty.empty()
@@ -107,8 +118,3 @@ def Sliders_generation():
     #     return x
 
     #-------------------------------------------------------------------loading problem-------------------------------------------------------------------#
-
-    # generate = st.button('Generate')
-
-    # if generate:
-    #     empty.write(song)
