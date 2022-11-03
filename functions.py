@@ -88,9 +88,9 @@ def sound_modification(sliders_data,List_amplitude_axis):
     empty.empty()
     modified_bins=[]
     for i in range(0,10):
-        modified_bins.append(sliders_data[i]*List_amplitude_axis[i])
-    st.write(modified_bins)
-    st.write(sliders_data)
+        modified_bins.append( 10**(sliders_data[i]/20) * List_amplitude_axis[i])
+    # st.write(modified_bins)
+    # st.write(sliders_data)
     mod_List_amplitude_axis=list(itertools.chain.from_iterable(modified_bins))
     return mod_List_amplitude_axis,empty
 
