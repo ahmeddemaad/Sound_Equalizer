@@ -98,6 +98,8 @@ def inverse_fourier(mod_List_amplitude_axis,phase):
     ifft_file=sc.ifft(mod)
     return ifft_file
     #-------------------------------------------------------------------modification-------------------------------------------------------------------#
+
+
     #     global empty
     #     
 
@@ -110,7 +112,10 @@ def inverse_fourier(mod_List_amplitude_axis,phase):
     #             mod_List_amplitude_axis.append(List_amplitude_axis[i]*Amplitude)
     #             i = i+1
     #         return mod_List_amplitude_axis
+
+
     #-------------------------------------------------------------------sliders-generate-------------------------------------------------------------------#
+
 
     # def slider(i):
     #     x = st.slider(min_value=0, max_value=20,
