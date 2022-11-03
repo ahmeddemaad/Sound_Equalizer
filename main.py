@@ -29,19 +29,18 @@ with tab1:
     if Sound:
         fn.Audio_player(Sound)
         loaded_sound_file, sampling_rate = fn.Sound_loading(Sound)
-        amplitude,phase=fn.Fourier_operations(loaded_sound_file)
-        frequency,amplitude= fn.magnitude_spectrum_ (amplitude,sampling_rate, 1 )
+        amplitude,phase,rfrequency=fn.Fourier_operations(loaded_sound_file,sampling_rate)
+        # rfrequency,amplitude= fn.magnitude_spectrum_ (amplitude,sampling_rate, 1 )
         ax = plt.figure(figsize=(10, 8))
-        List_freq_axis, List_amplitude_axis=fn.bins_separation(frequency, amplitude)
+        List_freq_axis, List_amplitude_axis=fn.bins_separation(rfrequency, amplitude)
         sliders_date=fn.Sliders_generation()
         mod_List_amplitude_axis,empty=fn.sound_modification(sliders_date,List_amplitude_axis)
-        st.write(mod_List_amplitude_axis[0])
         phase=phase[:len(mod_List_amplitude_axis):1]
         ifft_file=fn.inverse_fourier(mod_List_amplitude_axis,phase)    # generate = st.button('Generate')
         generate=st.button('Generate')
         if generate:
-            song=ipd.Audio(ifft_file,rate=sampling_rate)
+            song=ipd.Audio(ifft_file,rate=sampling_rate/2)
             empty.write(song)
-        frequency=frequency[:len(mod_List_amplitude_axis):1]
-        # plt.plot(frequency, mod_List_amplitude_axis, color='black')
+        rfrequency=rfrequency[:len(mod_List_amplitude_axis):1]
+        # plt.plot(rfrequency, mod_List_amplitude_axis, color='black')
         # st.plotly_chart(ax)

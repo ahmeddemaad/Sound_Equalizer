@@ -31,25 +31,26 @@ def Uploader():
 
 
 def Sound_loading(file):
-    loaded_sound_file, sampling_rate = librosa.load(file)
+    loaded_sound_file, sampling_rate = librosa.load(file,sr=None)
     return loaded_sound_file, sampling_rate
 
     #-------------------------------------------------------------------processing-------------------------------------------------------------------#
 
 
-def Fourier_operations(loaded_sound_file):
-    fft_file = np.fft.fft(loaded_sound_file)
+def Fourier_operations(loaded_sound_file,sampling_rate):
+    fft_file = sc.fft.rfft(loaded_sound_file)
     amplitude= np.abs(fft_file)
     phase =np.angle(fft_file)
-    return amplitude,phase
+    frequency =sc.fft.rfftfreq(len(loaded_sound_file),1/sampling_rate)
+    return amplitude,phase,frequency
 
-def magnitude_spectrum_(amplitude, sr, f_ratio):
-    frequency = np.linspace(0, sr, len(amplitude))
-    number_frequency_bins = int(len(frequency) * f_ratio)
-    frequency = frequency[:number_frequency_bins]
-    st.write(len(frequency))
-    amplitude = amplitude[:number_frequency_bins]
-    return frequency, amplitude
+# def magnitude_spectrum_(amplitude, sr, f_ratio):
+#     frequency = np.linspace(0, sr, len(amplitude))
+#     number_frequency_bins = int(len(frequency) * f_ratio)
+#     frequency = frequency[:number_frequency_bins]
+#     st.write(len(frequency))
+#     amplitude = amplitude[:number_frequency_bins]
+#     return frequency, amplitude
 
 
 #-------------------------------------------------------------------bins_seperation-------------------------------------------------------------------#
