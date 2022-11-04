@@ -44,15 +44,15 @@ with tab1:
         modified_time_axis=np.linspace(0, audio_duration, len(mod_List_amplitude_axis))
         phase=phase[:len(mod_List_amplitude_axis):1]
         ifft_file=fn.inverse_fourier(mod_List_amplitude_axis,phase)    # generate = st.button('Generate')
-        generate=st.button('Generate')
-        if generate:
-            song=ipd.Audio(ifft_file,rate=sampling_rate/2)
-            empty.write(song)
+        # generate=st.button('Generate')
+        # if generate:
+        song=ipd.Audio(ifft_file,rate=sampling_rate/2)
+        empty.write(song)
         rfrequency=rfrequency[:len(mod_List_amplitude_axis):1]
         
        
         fn.dynamic_plot(original_time_axis.tolist(), loaded_sound_file.tolist())
-        fn.dynamic_plot(modified_time_axis.tolist(),mod_List_amplitude_axis)
+        #fn.dynamic_plot(modified_time_axis.tolist(),mod_List_amplitude_axis)
         #plot original audio in time domain (static)
 
         #plot in frequency domain

@@ -36,7 +36,6 @@ def get_audio_duration(file):
     
 
 def Uploader():
-
     file = st.file_uploader(label="Upload your sound")
     return file
 
@@ -105,17 +104,19 @@ def bins_separation(frequency, amplitude):
         List_amplitude_axis.append(
             amplitude[i*bin_max_frequency_value:(i+1)*bin_max_frequency_value])
         i = i+1
-    return List_freq_axis, List_amplitude_axis
+    return List_freq_axis, List_amplitude_axis,bin_max_frequency_value
 #-------------------------------------------------------------------sliders-generation-------------------------------------------------------------------#
 
-def Sliders_generation():
+def Sliders_generation(bin_max_frequency_value):
     columns = st.columns(10)
     sliders_data = []
 
     for i in range(0, 10):
         with columns[i]:
+            e = (i+1)*bin_max_frequency_value
             value = svs.vertical_slider(
                 key=i, default_value=1, step=1, min_value=-20, max_value=20)
+            st.write(f" { e } HZ")
             if value == None:
                 value = 1
             sliders_data.append(value)
@@ -127,8 +128,8 @@ def sound_modification(sliders_data,List_amplitude_axis):
     modified_bins=[]
     for i in range(0,10):
         modified_bins.append( 10**(sliders_data[i]/20) * List_amplitude_axis[i])
-    # st.write(modified_bins)
-    # st.write(sliders_data)
+    st.write(modified_bins)
+    st.write(sliders_data)
     mod_List_amplitude_axis=list(itertools.chain.from_iterable(modified_bins))
     return mod_List_amplitude_axis,empty
 
