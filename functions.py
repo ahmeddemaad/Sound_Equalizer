@@ -1,7 +1,7 @@
 import IPython.display as ipd
 import librosa.display
 import librosa
-from time import time
+import time
 from typing import List
 import numpy as np
 from requests import delete
@@ -14,6 +14,10 @@ import scipy as sc
 from scipy.fftpack import fft
 import streamlit_vertical_slider as svs
 import cmath
+import wave
+import contextlib
+import plotly.graph_objects as go
+
 #-------------------------------------------------------------------player for audio-------------------------------------------------------------------#
 
 
@@ -21,6 +25,14 @@ def Audio_player(file):
     st.audio(file, format="audio/wav", start_time=0)
 
     #-------------------------------------------------------------------Uploaderr-------------------------------------------------------------------#
+
+
+def get_audio_duration(file):
+    with contextlib.closing(wave.open(file.name, 'r')) as file:
+        frames = file.getnframes()
+        rate = file.getframerate()
+        duration = frames / float(rate)
+        return duration
 
 
 def Uploader():
@@ -37,7 +49,33 @@ def Sound_loading(file):
     #-------------------------------------------------------------------processing-------------------------------------------------------------------#
 
 
+def make_chart(df, y_col, ymin, ymax):
+    fig = go.Figure(layout_yaxis_range=[ymin, ymax])
+    fig.add_trace(go.Scatter(x=df['time'], y=df[y_col], mode='lines'))
+    fig.update_layout(width=900, height=570, xaxis_title='time',
+                      yaxis_title=y_col)
+    st.write(fig)
+
+
+def dynamic_plot(x, y):
+    plot_spot = st.empty()
+    dataframe = {'time': x, 'amplitude': y}
+    df = pd.DataFrame(dataframe)
+
+    length = len(df)
+    ymax = max(df['amplitude'])
+    ymin = min(df['amplitude'])
+
+    rows_until_1sec = df['time'].loc[df['time'] <= float(1)]
+    for i in range(0, length-1, 500):
+        df_tmp = df.iloc[i:i+len(rows_until_1sec)]
+        with plot_spot:
+            make_chart(df_tmp, 'amplitude', ymin, ymax)
+        time.sleep(0.001)
+
+
 def Fourier_operations(loaded_sound_file, sampling_rate):
+
     fft_file = sc.fft.rfft(loaded_sound_file)
     amplitude = np.abs(fft_file)
     phase = np.angle(fft_file)
@@ -104,6 +142,7 @@ def inverse_fourier(mod_List_amplitude_axis, phase):
     mod = np.multiply(mod_List_amplitude_axis, np.exp(1j*phase))
     ifft_file = sc.ifft(mod)
     return ifft_file
+
     #-------------------------------------------------------------------modification-------------------------------------------------------------------#
 
     #     global empty
