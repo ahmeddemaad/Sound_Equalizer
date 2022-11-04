@@ -16,6 +16,7 @@ import streamlit_vertical_slider as svs
 import cmath
 #-------------------------------------------------------------------player for audio-------------------------------------------------------------------#
 
+
 def Audio_player(file):
     st.audio(file, format="audio/wav", start_time=0)
 
@@ -30,18 +31,18 @@ def Uploader():
 
 
 def Sound_loading(file):
-    loaded_sound_file, sampling_rate = librosa.load(file,sr=None)
+    loaded_sound_file, sampling_rate = librosa.load(file, sr=None)
     return loaded_sound_file, sampling_rate
 
     #-------------------------------------------------------------------processing-------------------------------------------------------------------#
 
 
-def Fourier_operations(loaded_sound_file,sampling_rate):
+def Fourier_operations(loaded_sound_file, sampling_rate):
     fft_file = sc.fft.rfft(loaded_sound_file)
-    amplitude= np.abs(fft_file)
-    phase =np.angle(fft_file)
-    frequency =sc.fft.rfftfreq(len(loaded_sound_file),1/sampling_rate)
-    return amplitude,phase,frequency
+    amplitude = np.abs(fft_file)
+    phase = np.angle(fft_file)
+    frequency = sc.fft.rfftfreq(len(loaded_sound_file), 1/sampling_rate)
+    return amplitude, phase, frequency
 
 # def magnitude_spectrum_(amplitude, sr, f_ratio):
 #     frequency = np.linspace(0, sr, len(amplitude))
@@ -62,12 +63,13 @@ def bins_separation(frequency, amplitude):
     i = 0
     while(i < 10):
         List_freq_axis.append(
-            frequency[i*bin_max_frequency_value : (i+1)*bin_max_frequency_value])
+            frequency[i*bin_max_frequency_value: (i+1)*bin_max_frequency_value])
         List_amplitude_axis.append(
             amplitude[i*bin_max_frequency_value:(i+1)*bin_max_frequency_value])
         i = i+1
-    return List_freq_axis, List_amplitude_axis,bin_max_frequency_value
+    return List_freq_axis, List_amplitude_axis, bin_max_frequency_value
 #-------------------------------------------------------------------sliders-generation-------------------------------------------------------------------#
+
 
 def Sliders_generation(bin_max_frequency_value):
     columns = st.columns(10)
@@ -84,26 +86,28 @@ def Sliders_generation(bin_max_frequency_value):
             sliders_data.append(value)
     return sliders_data
 
-def sound_modification(sliders_data,List_amplitude_axis):
+
+def sound_modification(sliders_data, List_amplitude_axis):
     empty = st.empty()
     empty.empty()
-    modified_bins=[]
-    for i in range(0,10):
-        modified_bins.append( 10**(sliders_data[i]/20) * List_amplitude_axis[i])
+    modified_bins = []
+    for i in range(0, 10):
+        modified_bins.append(10**(sliders_data[i]/20) * List_amplitude_axis[i])
     st.write(modified_bins)
     st.write(sliders_data)
-    mod_List_amplitude_axis=list(itertools.chain.from_iterable(modified_bins))
-    return mod_List_amplitude_axis,empty
+    mod_List_amplitude_axis = list(
+        itertools.chain.from_iterable(modified_bins))
+    return mod_List_amplitude_axis, empty
 
-def inverse_fourier(mod_List_amplitude_axis,phase):
-    mod=np.multiply(mod_List_amplitude_axis,np.exp(1j*phase))
-    ifft_file=sc.ifft(mod)
+
+def inverse_fourier(mod_List_amplitude_axis, phase):
+    mod = np.multiply(mod_List_amplitude_axis, np.exp(1j*phase))
+    ifft_file = sc.ifft(mod)
     return ifft_file
     #-------------------------------------------------------------------modification-------------------------------------------------------------------#
 
-
     #     global empty
-    #     
+    #
 
     # def bins_modification(empty, List_freq_axis, List_amplitude_axis):
     #         empty.empty()
@@ -115,9 +119,7 @@ def inverse_fourier(mod_List_amplitude_axis,phase):
     #             i = i+1
     #         return mod_List_amplitude_axis
 
-
     #-------------------------------------------------------------------sliders-generate-------------------------------------------------------------------#
-
 
     # def slider(i):
     #     x = st.slider(min_value=0, max_value=20,
