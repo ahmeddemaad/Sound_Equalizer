@@ -33,8 +33,7 @@ with tab1:
         audio_duration = fn.get_audio_duration(Sound)
         loaded_sound_file, sampling_rate = fn.Sound_loading(Sound)
         # make an array for time with the same length as the sampled audio file
-        original_time_axis = np.linspace(
-            0, audio_duration, len(loaded_sound_file))
+        # original_time_axis = np.linspace( 0, audio_duration, len(loaded_sound_file))
         # plot original audio in time domain (dynamic)
 
         amplitude, phase, rfrequency = fn.Fourier_operations(
@@ -46,8 +45,7 @@ with tab1:
         sliders_date = fn.Sliders_generation(bin_max_frequency_value)
         mod_List_amplitude_axis, empty = fn.sound_modification(
             sliders_date, List_amplitude_axis)
-        modified_time_axis = np.linspace(
-            0, audio_duration, len(mod_List_amplitude_axis))
+        # modified_time_axis = np.linspace( 0, audio_duration, len(mod_List_amplitude_axis))
         phase = phase[:len(mod_List_amplitude_axis):1]
         # generate = st.button('Generate')
         ifft_file = fn.inverse_fourier(mod_List_amplitude_axis, phase)
@@ -57,11 +55,29 @@ with tab1:
         empty.write(song)
         rfrequency = rfrequency[:len(mod_List_amplitude_axis):1]
 
-        fn.dynamic_plot(original_time_axis.tolist(),
-                        loaded_sound_file.tolist())
+        # fn.dynamic_plot(original_time_axis.tolist(), loaded_sound_file.tolist())
         # fn.dynamic_plot(modified_time_axis.tolist(),mod_List_amplitude_axis)
         # plot original audio in time domain (static)
 
         # plot in frequency domain
         #plt.plot(rfrequency, mod_List_amplitude_axis, color='black')
         # st.plotly_chart(ax)
+with tab2:
+    Music = ms.Uploader()
+    if Music:
+        fn.Audio_player(Music)
+        loaded_sound_file, sampling_rate = fn.Sound_loading(Music)
+        amplitude, phase, rfrequency = fn.Fourier_operations(
+            loaded_sound_file, sampling_rate)
+        sliders_data = ms.Sliders_generation()
+        modified_amplitude, empty = ms.music_modification(
+            rfrequency, amplitude, sliders_data)
+        ifft_file = fn.inverse_fourier(modified_amplitude, phase)
+        song = ipd.Audio(ifft_file, rate=sampling_rate/2)
+        empty.write(song)
+        ax = plt.figure(figsize=(10, 8))
+
+        # plt.plot(rfrequency, modified_amplitude, color='black')
+        # st.plotly_chart(ax)
+    else:
+        pass
