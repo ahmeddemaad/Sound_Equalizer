@@ -17,6 +17,7 @@ import cmath
 import wave
 import contextlib
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 #-------------------------------------------------------------------player for audio-------------------------------------------------------------------#
 
@@ -50,8 +51,11 @@ def Sound_loading(file):
 
 
 def make_chart(df, y_col, ymin, ymax):
-    fig = go.Figure(layout_yaxis_range=[ymin, ymax])
-    fig.add_trace(go.Scatter(x=df['time'], y=df[y_col], mode='lines'))
+    fig = make_subplots(
+    rows=2, cols=1,
+    subplot_titles=("Original Audio","Modified Audio"))
+
+    fig.add_trace(go.Scatter(x=df['time'], y=df[y_col], mode='lines'),row=1,col=1)
     fig.update_layout(width=900, height=570, xaxis_title='time',
                       yaxis_title=y_col)
     st.write(fig)
@@ -131,8 +135,7 @@ def sound_modification(sliders_data, List_amplitude_axis):
     modified_bins = []
     for i in range(0, 10):
         modified_bins.append(10**(sliders_data[i]/20) * List_amplitude_axis[i])
-    st.write(modified_bins)
-    st.write(sliders_data)
+  
     mod_List_amplitude_axis = list(
         itertools.chain.from_iterable(modified_bins))
     return mod_List_amplitude_axis, empty
