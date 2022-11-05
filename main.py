@@ -23,7 +23,8 @@ from multiprocessing import Process
 st.set_page_config(layout="wide")
 st.set_option('deprecation.showPyplotGlobalUse', False)
 
-options = st.sidebar.radio('Tools', options=["Audio", "Music", "Vowels", "Arrhythima","Voice Changer"])
+options = st.sidebar.radio(
+    'Tools', options=["Audio", "Music", "Vowels", "Arrhythima", "Voice Changer"])
 
 if options == 'Audio':
     # ----------------------------------------------- importing sound
@@ -31,9 +32,10 @@ if options == 'Audio':
     if Sound:
         # fn.Audio_player(Sound)
         audio_duration = fn.get_audio_duration(Sound)
-        loaded_sound_file, sampling_rate = fn.Sound_loading(Sound,1)
+        loaded_sound_file, sampling_rate = fn.Sound_loading(Sound, 1)
         # make an array for time with the same length as the sampled audio file
-        original_time_axis = np.linspace( 0, audio_duration, len(loaded_sound_file))
+        original_time_axis = np.linspace(
+            0, audio_duration, len(loaded_sound_file))
         # plot original audio in time domain (dynamic)
 
         amplitude, phase, rfrequency = fn.Fourier_operations(
@@ -45,7 +47,8 @@ if options == 'Audio':
         sliders_date = fn.Sliders_generation(bin_max_frequency_value)
         mod_List_amplitude_axis, empty = fn.sound_modification(
             sliders_date, List_amplitude_axis)
-        modified_time_axis = np.linspace( 0, audio_duration, len(mod_List_amplitude_axis))
+        modified_time_axis = np.linspace(
+            0, audio_duration, len(mod_List_amplitude_axis))
         phase = phase[:len(mod_List_amplitude_axis):1]
         # generate = st.button('Generate')
         ifft_file = fn.inverse_fourier(mod_List_amplitude_axis, phase)
@@ -54,7 +57,8 @@ if options == 'Audio':
         song = ipd.Audio(ifft_file, rate=sampling_rate/2)
         empty.write(song)
         rfrequency = rfrequency[:len(mod_List_amplitude_axis):1]
-        fn.dynamic_plot(original_time_axis.tolist(),loaded_sound_file.tolist())
+        fn.dynamic_plot(original_time_axis.tolist(),
+                        loaded_sound_file.tolist())
         # fn.dynamic_plot(modified_time_axis.tolist(),mod_List_amplitude_axis)
         # plot original audio in time domain (static)
 
@@ -65,7 +69,7 @@ if options == 'Music':
     Music = ms.Uploader()
     if Music:
         fn.Audio_player(Music)
-        loaded_sound_file, sampling_rate = fn.Sound_loading(Music,1)
+        loaded_sound_file, sampling_rate = fn.Sound_loading(Music, 1)
         amplitude, phase, rfrequency = fn.Fourier_operations(
             loaded_sound_file, sampling_rate)
         sliders_data = ms.Sliders_generation()
@@ -80,25 +84,28 @@ if options == 'Music':
     else:
         pass
 if options == 'Arrhythima':
-        ar.arrhythima()
+    ar.arrhythima()
 if options == 'Voice Changer':
     Sound = fn.Uploader()
     if Sound:
-        voice = st.sidebar.radio('Voice', options=["Deep Voice","Smooth Voice"])
+        voice = st.sidebar.radio(
+            'Voice', options=["Deep Voice", "Smooth Voice"])
         fn.Audio_player(Sound)
+        speed_rate = 1.4
+        sampling_rate_factor = 1.4
         if voice == "Deep Voice":
             empty = st.empty()
             empty.empty()
-            speed_rate=1.4
+            speed_rate = 1.4
             sampling_rate_factor = 1.4
         elif voice == "Smooth Voice":
             empty = st.empty()
             empty.empty()
-            speed_rate=0.5
+            speed_rate = 0.5
+
             sampling_rate_factor = 0.5
-    loaded_sound_file, sampling_rate = vc.Voice_changer(Sound,speed_rate)
-    song = ipd.Audio(loaded_sound_file, rate=sampling_rate/sampling_rate_factor)
-    empty.write(song)
 
-
-
+        loaded_sound_file, sampling_rate = vc.Voice_changer(Sound, speed_rate)
+        song = ipd.Audio(loaded_sound_file, rate=sampling_rate /
+                         sampling_rate_factor)
+        empty.write(song)

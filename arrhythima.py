@@ -20,7 +20,9 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from scipy.misc import electrocardiogram
 
+
 def arrhythima():
+    col1, col2, col3 = st.columns([.2, .7, .1])
     ecg = electrocardiogram()
 
     fs = 360
@@ -31,18 +33,19 @@ def arrhythima():
 
     points_per_freq = len(fourier_x_axis) / (fourier_x_axis[-1])
 
-    value = st.slider(label="Arrhythimia" ,min_value=0 ,max_value=10 ,value=1 ,key=12)
+    value = st.slider(label="Arrhythimia", min_value=0,
+                      max_value=10, value=1, key=12)
 
-    fourier_y_axis[int(points_per_freq*1)   :int(points_per_freq* 5)] *= value
+    fourier_y_axis[int(points_per_freq*1):int(points_per_freq * 5)] *= value
 
-    modified_signal         = sc.fft.irfft(fourier_y_axis) 
+    modified_signal = sc.fft.irfft(fourier_y_axis)
 
     fig, axs = plt.subplots()
-    fig.set_size_inches(14,5)
+    fig.set_size_inches(14, 5)
 
     plt.plot(time, (modified_signal))
     plt.xlabel("Time in s")
     plt.ylabel("ECG in mV")
     plt.xlim(45, 51)
 
-    st.plotly_chart(fig)
+    col1.plotly_chart(fig)
