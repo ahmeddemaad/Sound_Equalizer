@@ -43,8 +43,10 @@ def Uploader():
     #-------------------------------------------------------------------reading Audio -------------------------------------------------------------------#
 
 
-def Sound_loading(file):
+def Sound_loading(file,speed_rate):
     loaded_sound_file, sampling_rate = librosa.load(file, sr=None)
+    # speed_rate=st.slider(label="speed Rate",min_value= 0.1 , max_value=2.0 ,value=1.0)
+    loaded_sound_file = librosa.effects.time_stretch(loaded_sound_file, rate=speed_rate)
     return loaded_sound_file, sampling_rate
 
     #-------------------------------------------------------------------processing-------------------------------------------------------------------#
@@ -56,8 +58,7 @@ def make_chart(df, y_col, ymin, ymax):
     subplot_titles=("Original Audio","Modified Audio"))
 
     fig.add_trace(go.Scatter(x=df['time'], y=df[y_col], mode='lines'),row=1,col=1)
-    fig.update_layout(width=900, height=570, xaxis_title='time',
-                      yaxis_title=y_col)
+    fig.update_layout(width=900, height=570, xaxis_title='time',yaxis_title=y_col)
     st.write(fig)
 
 
@@ -85,15 +86,6 @@ def Fourier_operations(loaded_sound_file, sampling_rate):
     phase = np.angle(fft_file)
     frequency = sc.fft.rfftfreq(len(loaded_sound_file), 1/sampling_rate)
     return amplitude, phase, frequency
-
-# def magnitude_spectrum_(amplitude, sr, f_ratio):
-#     frequency = np.linspace(0, sr, len(amplitude))
-#     number_frequency_bins = int(len(frequency) * f_ratio)
-#     frequency = frequency[:number_frequency_bins]
-#     st.write(len(frequency))
-#     amplitude = amplitude[:number_frequency_bins]
-#     return frequency, amplitude
-
 
 #-------------------------------------------------------------------bins_seperation-------------------------------------------------------------------#
 
@@ -134,10 +126,8 @@ def sound_modification(sliders_data, List_amplitude_axis):
     empty.empty()
     modified_bins = []
     for i in range(0, 10):
-        modified_bins.append(10**(sliders_data[i]/20) * List_amplitude_axis[i])
-  
-    mod_List_amplitude_axis = list(
-        itertools.chain.from_iterable(modified_bins))
+        modified_bins.append(sliders_data[i]* List_amplitude_axis[i])
+    mod_List_amplitude_axis = list(itertools.chain.from_iterable(modified_bins))
     return mod_List_amplitude_axis, empty
 
 
@@ -145,27 +135,3 @@ def inverse_fourier(mod_List_amplitude_axis, phase):
     mod = np.multiply(mod_List_amplitude_axis, np.exp(1j*phase))
     ifft_file = sc.ifft(mod)
     return ifft_file
-
-    #-------------------------------------------------------------------modification-------------------------------------------------------------------#
-
-    #     global empty
-    #
-
-    # def bins_modification(empty, List_freq_axis, List_amplitude_axis):
-    #         empty.empty()
-    #         mod_List_amplitude_axis = []
-    #         i = 0
-    #         while(i < 10):
-    #             Amplitude = slider(i)
-    #             mod_List_amplitude_axis.append(List_amplitude_axis[i]*Amplitude)
-    #             i = i+1
-    #         return mod_List_amplitude_axis
-
-    #-------------------------------------------------------------------sliders-generate-------------------------------------------------------------------#
-
-    # def slider(i):
-    #     x = st.slider(min_value=0, max_value=20,
-    #                     key=i, label='saba7o', value=1)
-    #     return x
-
-    #-------------------------------------------------------------------loading problem-------------------------------------------------------------------#
