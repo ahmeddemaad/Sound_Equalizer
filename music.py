@@ -23,7 +23,7 @@ def Sliders_generation():
         with columns[i]:
 
             value = svs.vertical_slider(
-                key=i, default_value=1, step=1, min_value=-20, max_value=20)
+                key=i, default_value=1, step=1, min_value=-20, max_value=20, slider_color= '#3182ce',thumb_color = 'black')
 
             if value == None:
                 value = 1
@@ -32,7 +32,7 @@ def Sliders_generation():
 
 
 def Uploader():
-    file = st.file_uploader(label="Upload your sound", key=4444)
+    file = st.file_uploader(label="Upload your sound",label_visibility='hidden', key=4444)
     return file
 
 

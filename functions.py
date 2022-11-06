@@ -18,7 +18,7 @@ import wave
 import contextlib
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-
+import simpleaudio as sa
 #-------------------------------------------------------------------player for audio-------------------------------------------------------------------#
 
 
@@ -37,7 +37,7 @@ def get_audio_duration(file):
 
 
 def Uploader():
-    file = st.file_uploader(label="Upload your sound")
+    file = st.file_uploader(label='Upload your sound', label_visibility='hidden')
     return file
 
     #-------------------------------------------------------------------reading Audio -------------------------------------------------------------------#
@@ -50,34 +50,37 @@ def Sound_loading(file,speed_rate):
     return loaded_sound_file, sampling_rate
 
     #-------------------------------------------------------------------processing-------------------------------------------------------------------#
-
-
-def make_chart(df, y_col, ymin, ymax):
-    fig = make_subplots(
-    rows=2, cols=1,
+fig = make_subplots(
+    rows=2, cols=1,shared_xaxes=True,
     subplot_titles=("Original Audio","Modified Audio"))
-
-    fig.add_trace(go.Scatter(x=df['time'], y=df[y_col], mode='lines'),row=1,col=1)
-    fig.update_layout(width=900, height=570, xaxis_title='time',yaxis_title=y_col)
+    
+def make_chart(df, y_col, ymin, ymax,type):
+    if type=="original": 
+        row=1
+    elif type=="modified":
+        row=2
+    fig.add_trace(go.Scatter(x=df['time'], y=df[y_col], mode='lines'),row=row,col=1)
+    fig.update_layout(width=1200, height=300, xaxis_title='time',yaxis_title=y_col)
+    fig.update_traces(line_color="#3182ce")
     st.write(fig)
-
-
-def dynamic_plot(x, y):
+    fig.data=[]
+    fig.layout={}
+    
+def dynamic_plot(original_x, original_y,type):
     plot_spot = st.empty()
-    dataframe = {'time': x, 'amplitude': y}
-    df = pd.DataFrame(dataframe)
+    original_dataframe = {'time': original_x, 'amplitude': original_y}
+    original_df = pd.DataFrame(original_dataframe)
+    length = len(original_df)
+    original_ymax = max(original_df['amplitude'])
+    original_ymin = min(original_df['amplitude'])
 
-    length = len(df)
-    ymax = max(df['amplitude'])
-    ymin = min(df['amplitude'])
-
-    rows_until_1sec = df['time'].loc[df['time'] <= float(1)]
-    for i in range(0, length-1, 500):
-        df_tmp = df.iloc[i:i+len(rows_until_1sec)]
+    rows_until_1sec = original_df['time'].loc[original_df['time'] <= float(1)]
+    for i in range(0, length-1, 1500):
+        original_df_tmp = original_df.iloc[i:i+len(rows_until_1sec)]
         with plot_spot:
-            make_chart(df_tmp, 'amplitude', ymin, ymax)
+            make_chart(original_df_tmp, 'amplitude', original_ymin, original_ymax,type)
         time.sleep(0.001)
-
+        
 
 def Fourier_operations(loaded_sound_file, sampling_rate):
 
@@ -113,7 +116,7 @@ def Sliders_generation(bin_max_frequency_value):
         with columns[i]:
             e = (i+1)*bin_max_frequency_value
             value = svs.vertical_slider(
-                key=i, default_value=1, step=1, min_value=-20, max_value=20)
+                key=i, default_value=1, step=1, min_value=-20, max_value=20,slider_color= '#3182ce',thumb_color = 'black')
             st.write(f" { e } HZ")
             if value == None:
                 value = 1
