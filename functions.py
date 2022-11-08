@@ -19,6 +19,7 @@ import contextlib
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import simpleaudio as sa
+import altair as alt
 #-------------------------------------------------------------------player for audio-------------------------------------------------------------------#
 
 
@@ -60,26 +61,34 @@ def make_chart(df, y_col, ymin, ymax,type):
     elif type=="modified":
         row=2
     fig.add_trace(go.Scatter(x=df['time'], y=df[y_col], mode='lines'),row=row,col=1)
-    fig.update_layout(width=1200, height=300, xaxis_title='time',yaxis_title=y_col)
+    fig.update_layout(width=1200, height=500, xaxis_title='time',yaxis_title=y_col)
     fig.update_traces(line_color="#3182ce")
     st.write(fig)
     fig.data=[]
     fig.layout={}
-    
-def dynamic_plot(original_x, original_y,type):
+def static_plot(x,y,type):
     plot_spot = st.empty()
-    original_dataframe = {'time': original_x, 'amplitude': original_y}
-    original_df = pd.DataFrame(original_dataframe)
-    length = len(original_df)
-    original_ymax = max(original_df['amplitude'])
-    original_ymin = min(original_df['amplitude'])
-
-    rows_until_1sec = original_df['time'].loc[original_df['time'] <= float(1)]
-    for i in range(0, length-1, 1500):
-        original_df_tmp = original_df.iloc[i:i+len(rows_until_1sec)]
-        with plot_spot:
-            make_chart(original_df_tmp, 'amplitude', original_ymin, original_ymax,type)
-        time.sleep(0.001)
+    if type=="original": 
+        row=1
+    elif type=="modified":
+        row=2
+    fig.add_trace(go.Scatter(x=x, y=y, mode='lines'), row=row,col=1)
+    fig.update_layout(xaxis_title='time',yaxis_title='amplitude')
+    fig.update_traces(line_color="#3182ce")
+    st.write(fig)
+# def dynamic_plot(original_x, original_y,type):
+#     plot_spot = st.empty()
+#     original_dataframe = {'time': original_x, 'amplitude': original_y}
+#     original_df = pd.DataFrame(original_dataframe)
+#     length = len(original_df)
+#     original_ymax = max(original_df['amplitude'])
+#     original_ymin = min(original_df['amplitude'])
+#     rows_until_1sec = original_df['time'].loc[original_df['time'] <= float(1)]
+#     for i in range(0, length-1, 1500):
+#         original_df_tmp = original_df.iloc[i:i+len(rows_until_1sec)]
+#         with plot_spot:
+#             make_chart(original_df_tmp, 'amplitude', original_ymin, original_ymax,type)
+#         time.sleep(0.001)
         
 
 def Fourier_operations(loaded_sound_file, sampling_rate):
@@ -123,6 +132,48 @@ def Sliders_generation(bin_max_frequency_value):
             sliders_data.append(value)
     return sliders_data
 
+def altair_plot(original_df,modified_df):
+    lines = alt.Chart(original_df).mark_line().encode(
+            x=alt.X('0:T', axis=alt.Axis(title='Time')),
+            y=alt.Y('1:Q', axis=alt.Axis(title='Amplitude'))
+        ).properties(
+            width=400,
+            height=300
+        )
+    modified_lines=alt.Chart(modified_df).mark_line().encode(
+        x=alt.X('0:T', axis=alt.Axis(title='Time')),
+        y=alt.Y('1:Q', axis=alt.Axis(title='Amplitude'))
+    ).properties(
+        width=400,
+        height=300
+        ).interactive()
+    return lines
+def plot_animation(original_df):
+            lines = alt.Chart(original_df).mark_line().encode(
+                x=alt.X('time', axis=alt.Axis(title='Time')),
+                y=alt.Y('amplitude', axis=alt.Axis(title='Amplitude')),
+            ).properties(
+                width=400,
+                height=300
+            ).interactive()
+           
+            return lines
+
+def dynamic_plot(line_plot,original_df,modified_df):
+    N = original_df.shape[0]  # number of elements in the dataframe
+    burst = 6       # number of elements (months) to add to the plot
+    size = burst    # size of the current dataset
+    for i in range(1, N):
+                step_df = original_df.iloc[0:size]
+                mod_step_df = modified_df.iloc[0:size]
+                lines = plot_animation(step_df)
+                mod_lines=plot_animation(mod_step_df)
+                concat=alt.hconcat(lines,mod_lines)
+                line_plot = line_plot.altair_chart(concat)
+                size = i + burst
+                if size >= N:
+                    size = N - 1
+                time.sleep(.00000000001)
 
 def sound_modification(sliders_data, List_amplitude_axis):
     empty = st.empty()

@@ -6,7 +6,7 @@ import IPython.display as ipd
 import librosa.display
 import librosa
 import plotly.tools
-from time import time
+import time
 from typing import List
 import numpy as np
 from requests import delete
@@ -20,7 +20,7 @@ from scipy.fftpack import fft
 import streamlit_vertical_slider as svs
 from multiprocessing import Process
 from streamlit_option_menu import option_menu
-
+import altair as alt
 st.set_page_config(layout="wide", page_title="Equalizer")
 st.markdown("""
         <style>
@@ -71,8 +71,8 @@ if options == 'Audio':
         modified_time_axis = np.linspace(
             0, audio_duration, len(mod_List_amplitude_axis))
         phase = phase[:len(mod_List_amplitude_axis):1]
-        fn.dynamic_plot(original_time_axis.tolist(),loaded_sound_file.tolist(),"original")
-        fn.dynamic_plot(modified_time_axis.tolist(),mod_List_amplitude_axis,"modified")
+        #fn.dynamic_plot(original_time_axis.tolist(),loaded_sound_file.tolist(),"original")
+        #fn.dynamic_plot(modified_time_axis.tolist(),mod_List_amplitude_axis,"modified")
         # generate = st.button('Generate')
         ifft_file = fn.inverse_fourier(mod_List_amplitude_axis, phase)
         # generate=st.button('Generate')
@@ -80,13 +80,18 @@ if options == 'Audio':
         song = ipd.Audio(ifft_file, rate=sampling_rate/2)
         empty.write(song)
         rfrequency = rfrequency[:len(mod_List_amplitude_axis):1]
-        
-        
-        # plot original audio in time domain (static)
+        #Altair starts here
+        original_df = pd.DataFrame({'time': original_time_axis[::500], 'amplitude': loaded_sound_file[:: 500]}, columns=[
+            'time', 'amplitude'])
+        modified_df=pd.DataFrame({'time': modified_time_axis[::500],'amplitude':mod_List_amplitude_axis[::500]}, columns=['time','amplitude'])
+        lines= fn.altair_plot(original_df,modified_df)
+        line_plot = st.altair_chart(lines)
+        start_btn = st.button('Start')
 
-        # plot in frequency domain
-        #plt.plot(rfrequency, mod_List_amplitude_axis, color='black')
-        # st.plotly_chart(ax)
+        if start_btn:
+            fn.dynamic_plot(line_plot,original_df,modified_df)
+        
+        
 if options == 'Music':
     Music = ms.Uploader()
     if Music:
@@ -106,8 +111,10 @@ if options == 'Music':
         song = ipd.Audio(ifft_file, rate=sampling_rate/2)
         empty.write(song)
         ax = plt.figure(figsize=(10, 8))
-        fn.dynamic_plot(original_time_axis.tolist(),loaded_sound_file.tolist(),"original")
-        fn.dynamic_plot(modified_time_axis.tolist(),modified_amplitude,"modified")
+        #fn.static_plot(original_time_axis.tolist(), loaded_sound_file.tolist(),"original")
+        #fn.static_plot(modified_time_axis.tolist(),modified_amplitude,"modified")
+        #fn.dynamic_plot(original_time_axis.tolist(),loaded_sound_file.tolist(),"original")
+        #fn.dynamic_plot(modified_time_axis.tolist(),modified_amplitude,"modified")
         # plt.plot(rfrequency, modified_amplitude, color='black')
         # st.plotly_chart(ax)
     else:
