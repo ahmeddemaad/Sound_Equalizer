@@ -46,6 +46,7 @@ def Uploader():
 
 def Sound_loading(file,speed_rate):
     loaded_sound_file, sampling_rate = librosa.load(file, sr=None)
+   
     # speed_rate=st.slider(label="speed Rate",min_value= 0.1 , max_value=2.0 ,value=1.0)
     loaded_sound_file = librosa.effects.time_stretch(loaded_sound_file, rate=speed_rate)
     return loaded_sound_file, sampling_rate
@@ -66,6 +67,7 @@ def make_chart(df, y_col, ymin, ymax,type):
     st.write(fig)
     fig.data=[]
     fig.layout={}
+    
 def static_plot(x,y,type):
     plot_spot = st.empty()
     if type=="original": 
@@ -125,54 +127,53 @@ def Sliders_generation(bin_max_frequency_value):
         with columns[i]:
             e = (i+1)*bin_max_frequency_value
             value = svs.vertical_slider(
-                key=i, default_value=1, step=1, min_value=-20, max_value=20,slider_color= '#3182ce',thumb_color = 'black')
+                key=i, default_value=0, step=1, min_value=-20, max_value=20,slider_color= '#3182ce',thumb_color = 'black')
             st.write(f" { e } HZ")
             if value == None:
                 value = 1
             sliders_data.append(value)
     return sliders_data
 
-def altair_plot(original_df,modified_df):
+def altair_plot(original_df):
     lines = alt.Chart(original_df).mark_line().encode(
             x=alt.X('0:T', axis=alt.Axis(title='Time')),
             y=alt.Y('1:Q', axis=alt.Axis(title='Amplitude'))
         ).properties(
             width=400,
             height=300
-        )
-    modified_lines=alt.Chart(modified_df).mark_line().encode(
-        x=alt.X('0:T', axis=alt.Axis(title='Time')),
-        y=alt.Y('1:Q', axis=alt.Axis(title='Amplitude'))
-    ).properties(
-        width=400,
-        height=300
         ).interactive()
     return lines
 def plot_animation(original_df):
-            lines = alt.Chart(original_df).mark_line().encode(
-                x=alt.X('time', axis=alt.Axis(title='Time')),
-                y=alt.Y('amplitude', axis=alt.Axis(title='Amplitude')),
-            ).properties(
-                width=400,
-                height=300
-            ).interactive()
-           
-            return lines
+        chart1 = alt.Chart(original_df).mark_line(color="#3182ce").encode(
+            x=alt.X('time', axis=alt.Axis(title='Time')),
+            # y=alt.Y('amplitude', axis=alt.Axis(title='Amplitude')),
+        ).properties(
+            width=500,
+            height=300
+        ).interactive()
+        figure = chart1.encode(y=alt.Y('amplitude',axis=alt.Axis(title='Amplitude'))) | chart1.encode(y ='modified_amplitude')
+        return figure
 
-def dynamic_plot(line_plot,original_df,modified_df):
+
+def dynamic_plot(line_plot,original_df):
+
+    pause_btn = st.button('Pause')
     N = original_df.shape[0]  # number of elements in the dataframe
-    burst = 6       # number of elements (months) to add to the plot
-    size = burst    # size of the current dataset
+    st.write(N)
+    burst = 1      # number of elements (months) to add to the plot
+     # size of the current dataset
     for i in range(1, N):
+                size = burst+ i    
                 step_df = original_df.iloc[0:size]
-                mod_step_df = modified_df.iloc[0:size]
+                
                 lines = plot_animation(step_df)
-                mod_lines=plot_animation(mod_step_df)
-                concat=alt.hconcat(lines,mod_lines)
-                line_plot = line_plot.altair_chart(concat)
+            
+                line_plot = line_plot.altair_chart(lines)
                 size = i + burst
                 if size >= N:
                     size = N - 1
+                if pause_btn:
+                    size = 0
                 time.sleep(.00000000001)
 
 def sound_modification(sliders_data, List_amplitude_axis):
@@ -187,5 +188,5 @@ def sound_modification(sliders_data, List_amplitude_axis):
 
 def inverse_fourier(mod_List_amplitude_axis, phase):
     mod = np.multiply(mod_List_amplitude_axis, np.exp(1j*phase))
-    ifft_file = sc.ifft(mod)
+    ifft_file = sc.fft.irfft(mod)
     return ifft_file
