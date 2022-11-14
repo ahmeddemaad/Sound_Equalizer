@@ -147,11 +147,9 @@ def Sliders_generation(bin_max_frequency_value):
                     
             elif(value!=0 & value!=None):
                  traingles.append(value*window)
-                 st.write(traingles) 
             
                     
             # sliders_data.append(value)
-    st.write(traingles)        
     return traingles
 
 def altair_plot(original_df):
@@ -212,15 +210,13 @@ def dynamic_plot(line_plot,original_df):
             lines = plot_animation(step_df)
             line_plot = line_plot.altair_chart(lines)
             
-def sound_modification(sliders_data, List_amplitude_axis):
-    st.sidebar.write('Modified Audio')
-    
+def sound_modification(traingles, List_amplitude_axis):
     empty = st.sidebar.empty()
-    
     empty.empty()
     modified_bins = []
 
     for i in range(0, 10):
+        
         
             modified_bins.append(10**(traingles[i]/20)* List_amplitude_axis[i])
               
@@ -249,8 +245,8 @@ def plot_spectro(original_audio, modified_audio):
     img1 = librosa.display.specshow(S_db1, x_axis='time', y_axis='linear')
     plt.subplot(2,2,2)
     img2 = librosa.display.specshow(S_db2, x_axis='time', y_axis='linear')
-    # fig.colorbar(img1, format="%+2.f dB")
-    # fig.colorbar(img2, format="%+2.f dB")
+    fig.colorbar(img1, format="%+2.f dB")
+    fig.colorbar(img2, format="%+2.f dB")
     # fig.colorbar(img1, format="%+2.f dB")
     # fig.colorbar(img2, format="%+2.f dB")
 

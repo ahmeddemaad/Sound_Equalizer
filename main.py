@@ -102,40 +102,33 @@ if options == 'Audio':
         # plt.plot(rfrequency, mod_List_amplitude_axis, color='black')
         # st.plotly_chart(ax)
         # Altair starts here
-        original_df = pd.DataFrame({'time': original_time_axis[::500], 'amplitude': loaded_sound_file[:: 500], 'modified_amplitude': ifft_file[::500]}, columns=[
-            'time', 'amplitude', 'modified_amplitude'])
+        # original_df = pd.DataFrame({'time': original_time_axis[::500], 'amplitude': loaded_sound_file[:: 500], 'modified_amplitude': ifft_file[::500]}, columns=[
+        #     'time', 'amplitude', 'modified_amplitude'])
 
-        lines = fn.altair_plot(original_df)
-        line_plot = st.altair_chart(lines)
-        start_btn = st.button('Start')
+        # lines = fn.altair_plot(original_df)
+        # line_plot = st.altair_chart(lines)
+        # start_btn = st.button('Start')
         # ax = plt.figure(figsize=(10, 8))
         # amplitude = amplitude[:len(rfrequency)]
         # plt.plot(rfrequency, amplitude, color='black')
 
         # st.plotly_chart(ax)
         fn.plot_spectro(loaded_sound_file, loaded_sound_file)
-        # loaded_sound_file=loaded_sound_file[:len(ifft_file)]
-        # mod_List_amplitude_axis=mod_List_amplitude_axis[:len(ifft_file)]
-        # original_time_axis=original_time_axis[:len(ifft_file)]
+        loaded_sound_file = loaded_sound_file[:len(ifft_file)]
+        mod_List_amplitude_axis = mod_List_amplitude_axis[:len(ifft_file)]
+        original_time_axis = original_time_axis[:len(ifft_file)]
 
-        # #Altair starts here
-        # original_df = pd.DataFrame({'time': original_time_axis[::500], 'amplitude': loaded_sound_file[:: 500], 'modified_amplitude':ifft_file[::500]}, columns=[
-        #     'time', 'amplitude','modified_amplitude'])
+        # Altair starts here
+        original_df = pd.DataFrame({'time': original_time_axis[::500], 'amplitude': loaded_sound_file[:: 500], 'modified_amplitude': ifft_file[::500]}, columns=[
+            'time', 'amplitude', 'modified_amplitude'])
 
-        # lines= fn.altair_plot(original_df)
-        # line_plot = st.altair_chart(lines)
-        # fn.dynamic_plot(line_plot,original_df)
+        lines = fn.altair_plot(original_df)
+        line_plot = st.altair_chart(lines)
+        fn.dynamic_plot(line_plot, original_df)
         # #ax = plt.figure(figsize=(10, 8))
         # amplitude = amplitude[:len(rfrequency)]
         # #plt.plot(rfrequency, amplitude, color='black')
         # #st.plotly_chart(ax)
-        # X = librosa.stft(loaded_sound_file)
-        # Xdb = librosa.amplitude_to_db(abs(X))
-        # spec = plt.figure(figsize=(4, 1))
-        # st.write(librosa.display.specshow(
-        #     Xdb, sr=sampling_rate, x_axis='time', y_axis='hz'))
-        # plt.colorbar()
-        # st.pyplot(spec)
 
 
 if options == 'Music':
