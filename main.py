@@ -21,13 +21,15 @@ import streamlit_vertical_slider as svs
 from multiprocessing import Process
 from streamlit_option_menu import option_menu
 import altair as alt
+from scipy import signal
+
 st.set_page_config(layout="wide", page_title="Equalizer")
 st.markdown("""
         <style>
                 .css-18e3th9{
                     margin-top: -75px;
                     }
-                
+
                 .css-1qaq3qt{
                     width:100%;
                     align-items: center;
@@ -39,12 +41,13 @@ st.markdown("""
         </style>
         """, unsafe_allow_html=True)
 st.set_option('deprecation.showPyplotGlobalUse', False)
-options = option_menu(None, ["Audio", "Music", "Vowels", 'Arrhythmia','Voice Changer'], 
-    icons=['bi bi-soundwave', 'bi bi-music-note-beamed', "bi bi-type", 'bi bi-activity','bi bi-voicemail'], 
-    menu_icon="cast", default_index=0, orientation="horizontal", styles={
-        "container": {"align-items":"left","width": "1000px", "height":"50px"},
-        "nav-link-selected": {"background-color": "#3182ce", "padding":"100"},
-    })
+options = option_menu(None, ["Audio", "Music", "Vowels", 'Arrhythmia', 'Voice Changer'],
+                      icons=['bi bi-soundwave', 'bi bi-music-note-beamed',
+                             "bi bi-type", 'bi bi-activity', 'bi bi-voicemail'],
+                      menu_icon="cast", default_index=0, orientation="horizontal", styles={
+    "container": {"align-items": "left", "width": "1000px", "height": "50px"},
+    "nav-link-selected": {"background-color": "#3182ce", "padding": "100"},
+})
 
 
 if options == 'Audio':
@@ -58,7 +61,7 @@ if options == 'Audio':
         original_time_axis = np.linspace(
             0, audio_duration, len(loaded_sound_file))
         # plot original audio in time domain (dynamic)
-        
+
         amplitude, phase, rfrequency = fn.Fourier_operations(
             loaded_sound_file, sampling_rate)
         # rfrequency,amplitude= fn.magnitude_spectrum_ (amplitude,sampling_rate, 1 )
@@ -71,8 +74,8 @@ if options == 'Audio':
         modified_time_axis = np.linspace(
             0, audio_duration, len(mod_List_amplitude_axis))
         phase = phase[:len(mod_List_amplitude_axis):1]
-        #fn.dynamic_plot(original_time_axis.tolist(),loaded_sound_file.tolist(),"original")
-        #fn.dynamic_plot(modified_time_axis.tolist(),mod_List_amplitude_axis,"modified")
+        # fn.dynamic_plot(original_time_axis.tolist(),loaded_sound_file.tolist(),"original")
+        # fn.dynamic_plot(modified_time_axis.tolist(),mod_List_amplitude_axis,"modified")
         # generate = st.button('Generate')
         ifft_file = fn.inverse_fourier(mod_List_amplitude_axis, phase)
         # generate=st.button('Generate')
@@ -80,34 +83,28 @@ if options == 'Audio':
         song = ipd.Audio(ifft_file, rate=sampling_rate)
         empty.write(song)
         rfrequency = rfrequency[:len(mod_List_amplitude_axis):1]
-        loaded_sound_file=loaded_sound_file[:len(ifft_file)]
-        mod_List_amplitude_axis=mod_List_amplitude_axis[:len(ifft_file)]
-        original_time_axis=original_time_axis[:len(ifft_file)]
-        st.write("ifft",ifft_file)
-        
-        #Altair starts here
-        original_df = pd.DataFrame({'time': original_time_axis[::500], 'amplitude': loaded_sound_file[:: 500], 'modified_amplitude':ifft_file[::500]}, columns=[
-            'time', 'amplitude','modified_amplitude'])
- 
-        lines= fn.altair_plot(original_df)
+        loaded_sound_file = loaded_sound_file[:len(ifft_file)]
+        mod_List_amplitude_axis = mod_List_amplitude_axis[:len(ifft_file)]
+        original_time_axis = original_time_axis[:len(ifft_file)]
+        # st.write("ifft", ifft_file)
+        # ax = plt.figure(figsize=(10, 8))
+
+        # plt.plot(rfrequency, mod_List_amplitude_axis, color='black')
+        # st.plotly_chart(ax)
+        # Altair starts here
+        original_df = pd.DataFrame({'time': original_time_axis[::500], 'amplitude': loaded_sound_file[:: 500], 'modified_amplitude': ifft_file[::500]}, columns=[
+            'time', 'amplitude', 'modified_amplitude'])
+
+        lines = fn.altair_plot(original_df)
         line_plot = st.altair_chart(lines)
         start_btn = st.button('Start')
-        ax = plt.figure(figsize=(10, 8))
-        amplitude = amplitude[:len(rfrequency)]
-        plt.plot(rfrequency, amplitude, color='black')
-        st.plotly_chart(ax)
-        X = librosa.stft(loaded_sound_file)
-        Xdb = librosa.amplitude_to_db(abs(X))
+        # ax = plt.figure(figsize=(10, 8))
+        # amplitude = amplitude[:len(rfrequency)]
+        # plt.plot(rfrequency, amplitude, color='black')
 
-        spec = plt.figure(figsize=(14, 5))
-        st.write(librosa.display.specshow(
-            Xdb, sr=sampling_rate, x_axis='time', y_axis='hz'))
-        plt.colorbar()
-        st.pyplot(spec)
-        if start_btn:
-            fn.dynamic_plot(line_plot,original_df)
+        # st.plotly_chart(ax)
+        fn.plot_spectro(loaded_sound_file, loaded_sound_file)
 
-        
 if options == 'Music':
     Music = ms.Uploader()
     if Music:
@@ -124,14 +121,14 @@ if options == 'Music':
         modified_time_axis = np.linspace(
             0, audio_duration, len(modified_amplitude))
         ifft_file = fn.inverse_fourier(modified_amplitude, phase)
-        
+
         song = ipd.Audio(ifft_file, rate=sampling_rate/2)
         empty.write(song)
         ax = plt.figure(figsize=(10, 8))
         #fn.static_plot(original_time_axis.tolist(), loaded_sound_file.tolist(),"original")
-        #fn.static_plot(modified_time_axis.tolist(),modified_amplitude,"modified")
-        #fn.dynamic_plot(original_time_axis.tolist(),loaded_sound_file.tolist(),"original")
-        #fn.dynamic_plot(modified_time_axis.tolist(),modified_amplitude,"modified")
+        # fn.static_plot(modified_time_axis.tolist(),modified_amplitude,"modified")
+        # fn.dynamic_plot(original_time_axis.tolist(),loaded_sound_file.tolist(),"original")
+        # fn.dynamic_plot(modified_time_axis.tolist(),modified_amplitude,"modified")
         # plt.plot(rfrequency, modified_amplitude, color='black')
         # st.plotly_chart(ax)
     else:
@@ -141,7 +138,8 @@ if options == 'Arrhythmia':
 if options == 'Voice Changer':
     Sound = fn.Uploader()
     if Sound:
-        st.write('<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
+        st.write(
+            '<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
         voice = st.radio(
             'Voice', options=["Deep Voice", "Smooth Voice"])
         fn.Audio_player(Sound)

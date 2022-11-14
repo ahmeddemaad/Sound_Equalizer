@@ -20,6 +20,8 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import simpleaudio as sa
 import altair as alt
+from scipy import signal
+
 #-------------------------------------------------------------------player for audio-------------------------------------------------------------------#
 
 
@@ -108,6 +110,7 @@ def bins_separation(frequency, amplitude):
     List_freq_axis = []
     List_amplitude_axis = []
     bin_max_frequency_value = int(len(frequency)/10)
+    
     i = 0
     while(i < 10):
         List_freq_axis.append(
@@ -122,17 +125,28 @@ def bins_separation(frequency, amplitude):
 def Sliders_generation(bin_max_frequency_value):
     columns = st.columns(10)
     sliders_data = []
-
+    traingles=[]
+    window=Traingle(bin_max_frequency_value)
     for i in range(0, 10):
         with columns[i]:
             e = (i+1)*bin_max_frequency_value
             value = svs.vertical_slider(
                 key=i, default_value=0, step=1, min_value=-20, max_value=20,slider_color= '#3182ce',thumb_color = 'black')
             st.write(f" { e } HZ")
-            if value == None:
-                value = 1
-            sliders_data.append(value)
-    return sliders_data
+            if value == None   :
+                value = 0
+                traingles.append(value*np.ones(len(window)))
+            elif(value ==0):
+                traingles.append(value*np.ones(len(window)))
+                    
+            elif(value!=0 & value!=None):
+                 traingles.append(value*window)
+                 st.write(traingles) 
+            
+                    
+            # sliders_data.append(value)
+    st.write(traingles)        
+    return traingles
 
 def altair_plot(original_df):
     lines = alt.Chart(original_df).mark_line().encode(
@@ -176,12 +190,15 @@ def dynamic_plot(line_plot,original_df):
                     size = 0
                 time.sleep(.00000000001)
 
-def sound_modification(sliders_data, List_amplitude_axis):
+def sound_modification(traingles, List_amplitude_axis):
     empty = st.empty()
     empty.empty()
     modified_bins = []
+
     for i in range(0, 10):
-        modified_bins.append(sliders_data[i]* List_amplitude_axis[i])
+        
+            modified_bins.append(10**(traingles[i]/20)* List_amplitude_axis[i])
+              
     mod_List_amplitude_axis = list(itertools.chain.from_iterable(modified_bins))
     return mod_List_amplitude_axis, empty
 
@@ -190,3 +207,27 @@ def inverse_fourier(mod_List_amplitude_axis, phase):
     mod = np.multiply(mod_List_amplitude_axis, np.exp(1j*phase))
     ifft_file = sc.fft.irfft(mod)
     return ifft_file
+def Traingle(length_wave):
+    window = signal.windows.blackman(length_wave)
+    return window
+def plot_spectro(original_audio, modified_audio):
+
+   
+    
+    D1     = librosa.stft(original_audio)             # STFT of y
+    S_db1  = librosa.amplitude_to_db(np.abs(D1))
+    D2     = librosa.stft(modified_audio) #             # STFT of y
+    S_db2  = librosa.amplitude_to_db(np.abs(D2))
+
+    fig= plt.figure(figsize=[5,3])
+    plt.subplot(2,2,1)
+    img1 = librosa.display.specshow(S_db1, x_axis='time', y_axis='linear')
+    plt.subplot(2,2,2)
+    img2 = librosa.display.specshow(S_db2, x_axis='time', y_axis='linear')
+    # fig.colorbar(img1, format="%+2.f dB")
+    # fig.colorbar(img2, format="%+2.f dB")
+    # fig.colorbar(img1, format="%+2.f dB")
+    # fig.colorbar(img2, format="%+2.f dB")
+
+    st.pyplot(fig)
+    
