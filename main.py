@@ -27,7 +27,7 @@ st.set_page_config(layout="wide", page_title="Equalizer")
 st.markdown("""
         <style>
                 .css-18e3th9{
-                    margin-top: -75px;
+                    margin-top: -110px;
                     }
 
                 .css-1qaq3qt{
@@ -38,17 +38,27 @@ st.markdown("""
                .css-ocqkz7{
                 margin-left: -20px;
                }
+               .css-1vq4p4l{
+                margin-top: -80px;
+                margin-bottom: -20px;
+                margin-left: -10px;
+                margin-right: -10px;
+               }
+               .css-163ttbj{
+                width:18% !important;
+               }
+               .css-1cc1g65{
+                gap:0px;
+               }
+               .css-ocqkz7{
+                gap:0px;
+               }
         </style>
         """, unsafe_allow_html=True)
 st.set_option('deprecation.showPyplotGlobalUse', False)
-options = option_menu(None, ["Audio", "Music", "Vowels", 'Arrhythmia', 'Voice Changer'],
-                      icons=['bi bi-soundwave', 'bi bi-music-note-beamed',
-                             "bi bi-type", 'bi bi-activity', 'bi bi-voicemail'],
-                      menu_icon="cast", default_index=0, orientation="horizontal", styles={
-    "container": {"align-items": "left", "width": "1000px", "height": "50px"},
-    "nav-link-selected": {"background-color": "#3182ce", "padding": "100"},
-})
 
+options = st.sidebar.selectbox(
+    'Mode', ('Audio', 'Music', 'Vowels', 'Arrhythmia', 'Voice Changer'))
 
 if options == 'Audio':
     # ----------------------------------------------- importing sound
@@ -104,6 +114,29 @@ if options == 'Audio':
 
         # st.plotly_chart(ax)
         fn.plot_spectro(loaded_sound_file, loaded_sound_file)
+        # loaded_sound_file=loaded_sound_file[:len(ifft_file)]
+        # mod_List_amplitude_axis=mod_List_amplitude_axis[:len(ifft_file)]
+        # original_time_axis=original_time_axis[:len(ifft_file)]
+
+        # #Altair starts here
+        # original_df = pd.DataFrame({'time': original_time_axis[::500], 'amplitude': loaded_sound_file[:: 500], 'modified_amplitude':ifft_file[::500]}, columns=[
+        #     'time', 'amplitude','modified_amplitude'])
+
+        # lines= fn.altair_plot(original_df)
+        # line_plot = st.altair_chart(lines)
+        # fn.dynamic_plot(line_plot,original_df)
+        # #ax = plt.figure(figsize=(10, 8))
+        # amplitude = amplitude[:len(rfrequency)]
+        # #plt.plot(rfrequency, amplitude, color='black')
+        # #st.plotly_chart(ax)
+        # X = librosa.stft(loaded_sound_file)
+        # Xdb = librosa.amplitude_to_db(abs(X))
+        # spec = plt.figure(figsize=(4, 1))
+        # st.write(librosa.display.specshow(
+        #     Xdb, sr=sampling_rate, x_axis='time', y_axis='hz'))
+        # plt.colorbar()
+        # st.pyplot(spec)
+
 
 if options == 'Music':
     Music = ms.Uploader()
@@ -146,12 +179,12 @@ if options == 'Voice Changer':
         speed_rate = 1.4
         sampling_rate_factor = 1.4
         if voice == "Deep Voice":
-            empty = st.empty()
+            empty = st.sidebar.empty()
             empty.empty()
             speed_rate = 1.4
             sampling_rate_factor = 1.4
         elif voice == "Smooth Voice":
-            empty = st.empty()
+            empty = st.sidebar.empty()
             empty.empty()
             speed_rate = 0.5
 

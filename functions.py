@@ -23,12 +23,18 @@ import altair as alt
 from scipy import signal
 
 #-------------------------------------------------------------------player for audio-------------------------------------------------------------------#
+#-------------------------------------------------------------------session state variables-------------------------------------------------------------------#
+if 'start' not in st.session_state:
+    st.session_state.start=0
+if 'size1' not in st.session_state:
+    st.session_state.size1=0
 
+#-------------------------------------------------------------------audio player-------------------------------------------------------------------#
 
 def Audio_player(file):
-    st.audio(file, format="audio/wav", start_time=0)
+    st.sidebar.write("Original Audio")
+    st.sidebar.audio(file, format="audio/wav", start_time=0)
 
-    #-------------------------------------------------------------------Uploaderr-------------------------------------------------------------------#
 
 
 def get_audio_duration(file):
@@ -40,7 +46,7 @@ def get_audio_duration(file):
 
 
 def Uploader():
-    file = st.file_uploader(label='Upload your sound', label_visibility='hidden')
+    file = st.sidebar.file_uploader(label='Upload your sound', label_visibility='hidden')
     return file
 
     #-------------------------------------------------------------------reading Audio -------------------------------------------------------------------#
@@ -154,44 +160,63 @@ def altair_plot(original_df):
             y=alt.Y('1:Q', axis=alt.Axis(title='Amplitude'))
         ).properties(
             width=400,
-            height=300
+            height=200
         ).interactive()
+        
     return lines
 def plot_animation(original_df):
         chart1 = alt.Chart(original_df).mark_line(color="#3182ce").encode(
             x=alt.X('time', axis=alt.Axis(title='Time')),
             # y=alt.Y('amplitude', axis=alt.Axis(title='Amplitude')),
         ).properties(
-            width=500,
-            height=300
+            width=400,
+            height=150
         ).interactive()
         figure = chart1.encode(y=alt.Y('amplitude',axis=alt.Axis(title='Amplitude'))) | chart1.encode(y ='modified_amplitude')
         return figure
 
 
 def dynamic_plot(line_plot,original_df):
-
-    pause_btn = st.button('Pause')
+    col1, col2, col3 = st.columns([0.005,0.005,0.05])
+    with col1:
+        start_btn = st.button('Start',key='start_btn')
+    with col2:
+        pause_btn = st.button('Pause',key='pause')
+    with col3:
+         resume_btn = st.button('Resume',key='resume')
     N = original_df.shape[0]  # number of elements in the dataframe
-    st.write(N)
-    burst = 1      # number of elements (months) to add to the plot
-     # size of the current dataset
-    for i in range(1, N):
-                size = burst+ i    
-                step_df = original_df.iloc[0:size]
-                
-                lines = plot_animation(step_df)
-            
-                line_plot = line_plot.altair_chart(lines)
-                size = i + burst
-                if size >= N:
-                    size = N - 1
-                if pause_btn:
-                    size = 0
-                time.sleep(.00000000001)
 
-def sound_modification(traingles, List_amplitude_axis):
-    empty = st.empty()
+    burst = 10      # number of elements (months) to add to the plot
+    size = burst # size of the current dataset
+    if start_btn:
+        for i in range(1, N):
+                    st.session_state.start=i  
+                    step_df = original_df.iloc[0:size]
+                    lines = plot_animation(step_df)
+                    line_plot = line_plot.altair_chart(lines)
+                    size = i + burst
+                    st.session_state.size1 = size
+    elif resume_btn: 
+            print(st.session_state.start)
+            for i in range( st.session_state.start,N):
+                st.session_state.start =i 
+                step_df = original_df.iloc[0:size]
+                lines = plot_animation(step_df)
+                line_plot = line_plot.altair_chart(lines)
+                st.session_state.size1 = size
+                size = i + burst
+                time.sleep(.0000001)
+                
+    elif pause_btn:
+            step_df = original_df.iloc[0:st.session_state.size1]
+            lines = plot_animation(step_df)
+            line_plot = line_plot.altair_chart(lines)
+            
+def sound_modification(sliders_data, List_amplitude_axis):
+    st.sidebar.write('Modified Audio')
+    
+    empty = st.sidebar.empty()
+    
     empty.empty()
     modified_bins = []
 
