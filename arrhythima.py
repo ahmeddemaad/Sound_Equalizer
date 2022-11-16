@@ -19,33 +19,31 @@ import contextlib
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from scipy.misc import electrocardiogram
+import functions as fn
+
 
 
 def arrhythima():
-    col1, col2, col3 = st.columns([.2, .7, .1])
+    ''' if 'arrhythmia_slider' not in st.session_state:
+        st.session_state.arrhythmia_slider=1 '''
+    col1,col2=st.columns([1,.001])
     ecg = electrocardiogram()
-
     fs = 360
     time = np.arange(ecg.size) / fs
 
     fourier_x_axis = sc.fft.rfftfreq(len(ecg), (time[1]-time[0]))
     fourier_y_axis = sc.fft.rfft(ecg)
-
-    points_per_freq = len(fourier_x_axis) / (fourier_x_axis[-1])
-
+    
     value = st.slider(label="Arrhythmia", min_value=0,
                       max_value=10, value=1, key=12)
+    points_per_freq = len(fourier_x_axis) / (fourier_x_axis[-1])
     
     fourier_y_axis[int(points_per_freq*1):int(points_per_freq * 5)] *= value
-
     modified_signal = sc.fft.irfft(fourier_y_axis)
-    
-    fig, axs = plt.subplots()
-    fig.set_size_inches(14, 5)
-
-    plt.plot(time, (modified_signal), color='#3182ce')
-    plt.xlabel("Time in s")
-    plt.ylabel("ECG in mV")
-    plt.xlim(45, 51)
-
-    col1.plotly_chart(fig)
+    df=pd.DataFrame({'time':time, 'amplitude':modified_signal})
+    with col1:
+        lines = fn.altair_plot(df)
+        line_plot = st.altair_chart(lines)
+        fn.dynamic_plot(line_plot, df)
+   
+  #'''   st.write( st.session_state.arrhythmia_slider) '''

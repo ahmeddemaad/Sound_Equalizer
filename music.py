@@ -31,13 +31,11 @@ def Sliders_generation():
     return sliders_data
 
 
-def Uploader():
-    file = st.file_uploader(label="Upload your sound",label_visibility='hidden', key=4444)
-    return file
 
 
 def music_modification(frequency, amplitude, sliders_data):
-    empty = st.empty()
+    st.sidebar.write("Modified Audio")
+    empty = st.sidebar.empty()
     empty.empty()
     index_drums = np.where((frequency >= 0) & (frequency < 1000))
 

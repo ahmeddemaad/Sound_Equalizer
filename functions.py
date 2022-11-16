@@ -21,7 +21,7 @@ from plotly.subplots import make_subplots
 import simpleaudio as sa
 import altair as alt
 from scipy import signal
-
+import streamlit_nested_layout
 #-------------------------------------------------------------------player for audio-------------------------------------------------------------------#
 #-------------------------------------------------------------------session state variables-------------------------------------------------------------------#
 if 'start' not in st.session_state:
@@ -33,6 +33,7 @@ if 'size1' not in st.session_state:
 
 def Audio_player(file):
     st.sidebar.write("Original Audio")
+    st.sidebar.markdown('<style> h1 {color:white;} </style>')
     st.sidebar.audio(file, format="audio/wav", start_time=0)
 
 
@@ -128,11 +129,11 @@ def bins_separation(frequency, amplitude):
 #-------------------------------------------------------------------sliders-generation-------------------------------------------------------------------#
 
 
-def Sliders_generation(bin_max_frequency_value):
+def Sliders_generation(bin_max_frequency_value,window):
     columns = st.columns(10)
     sliders_data = []
-    traingles=[]
-    window=Traingle(bin_max_frequency_value)
+    triangles=[]
+
     for i in range(0, 10):
         with columns[i]:
             e = (i+1)*bin_max_frequency_value
@@ -141,55 +142,87 @@ def Sliders_generation(bin_max_frequency_value):
             st.write(f" { e } HZ")
             if value == None   :
                 value = 0
-                traingles.append(value*np.ones(len(window)))
+                triangles.append(value*np.ones(len(window)))
             elif(value ==0):
-                traingles.append(value*np.ones(len(window)))
+                triangles.append(value*np.ones(len(window)))
                     
             elif(value!=0 & value!=None):
-                 traingles.append(value*window)
+                 triangles.append(value*window)
             
                     
             # sliders_data.append(value)
-    return traingles
 
-def altair_plot(original_df):
-    lines = alt.Chart(original_df).mark_line().encode(
-            x=alt.X('0:T', axis=alt.Axis(title='Time')),
-            y=alt.Y('1:Q', axis=alt.Axis(title='Amplitude'))
-        ).properties(
-            width=400,
-            height=200
-        ).interactive()
-        
-    return lines
-def plot_animation(original_df):
-        chart1 = alt.Chart(original_df).mark_line(color="#3182ce").encode(
+    return triangles
+
+def altair_plot(df):
+    num_of_cols = len(df.axes[1])
+    if(num_of_cols) ==3: 
+        lines = alt.Chart(df).mark_line(color='#3182ce').encode(
+                x=alt.X('time', axis=alt.Axis(title='Time'))
+            ).properties(
+                width=500,
+                height=300
+            ).interactive()
+        figure = lines.encode(y=alt.Y('amplitude',axis=alt.Axis(title='Amplitude'))) | lines.encode(y ='modified_amplitude')
+    else:
+        lines = alt.Chart(df).mark_line(color='#3182ce').encode(
+                x=alt.X('time', axis=alt.Axis(title='Time'),scale=alt.Scale(domain=(45, 51)) )
+            ).properties(
+                width=1000,
+                height=500
+            ).interactive()
+        figure = lines.encode(y=alt.Y('amplitude',axis=alt.Axis(title='Amplitude')))
+    return figure
+
+
+def plot_animation(df):
+        num_of_cols = len(df.axes[1])
+        if(num_of_cols) ==3:
+            chart1 = alt.Chart(df).mark_line(color="#3182ce").encode(
             x=alt.X('time', axis=alt.Axis(title='Time')),
             # y=alt.Y('amplitude', axis=alt.Axis(title='Amplitude')),
         ).properties(
-            width=400,
-            height=150
+            width=500,
+            height=300
         ).interactive()
-        figure = chart1.encode(y=alt.Y('amplitude',axis=alt.Axis(title='Amplitude'))) | chart1.encode(y ='modified_amplitude')
+            figure = chart1.encode(y=alt.Y('amplitude',axis=alt.Axis(title='Amplitude'))) | chart1.encode(y ='modified_amplitude')
+        else:
+            chart1 = alt.Chart(df).mark_line(color="#3182ce").encode(
+            x=alt.X('time', axis=alt.Axis(title='Time'))
+            # y=alt.Y('amplitude', axis=alt.Axis(title='Amplitude')),
+        ).properties(
+            width=1000,
+            height=500
+        ).interactive()
+            
+            figure = chart1.encode(y=alt.Y('amplitude',axis=alt.Axis(title='Amplitude')))
         return figure
 
 
-def dynamic_plot(line_plot,original_df):
-    col1, col2, col3 = st.columns([0.005,0.005,0.05])
+def dynamic_plot(line_plot,df):
+   
+    col1, col2, col3 = st.sidebar.columns([0.5,0.5,0.5])
     with col1:
         start_btn = st.button('Start',key='start_btn')
     with col2:
         pause_btn = st.button('Pause',key='pause')
     with col3:
-         resume_btn = st.button('Resume',key='resume')
-    N = original_df.shape[0]  # number of elements in the dataframe
+        resume_btn = st.button('Resume',key='resume')
+    N = df.shape[0]  # number of elements in the dataframe
+    num_of_cols = len(df.axes[1])
+    rows_until_45sec = df.loc[df['time'] <= float(47)]
+    rows_until_51sec = df.loc[df['time'] <= float(51)]
+  
 
+    if(num_of_cols) ==2:
+        df=df.loc[len(rows_until_45sec):len(rows_until_51sec)]
+        
     burst = 10      # number of elements (months) to add to the plot
     size = burst # size of the current dataset
     if start_btn:
         for i in range(1, N):
                     st.session_state.start=i  
-                    step_df = original_df.iloc[0:size]
+                    step_df = df.iloc[0:size]
                     lines = plot_animation(step_df)
                     line_plot = line_plot.altair_chart(lines)
                     size = i + burst
@@ -198,7 +231,7 @@ def dynamic_plot(line_plot,original_df):
             print(st.session_state.start)
             for i in range( st.session_state.start,N):
                 st.session_state.start =i 
-                step_df = original_df.iloc[0:size]
+                step_df = df.iloc[0:size]
                 lines = plot_animation(step_df)
                 line_plot = line_plot.altair_chart(lines)
                 st.session_state.size1 = size
@@ -206,19 +239,19 @@ def dynamic_plot(line_plot,original_df):
                 time.sleep(.0000001)
                 
     elif pause_btn:
-            step_df = original_df.iloc[0:st.session_state.size1]
+            step_df = df.iloc[0:st.session_state.size1]
             lines = plot_animation(step_df)
             line_plot = line_plot.altair_chart(lines)
             
-def sound_modification(traingles, List_amplitude_axis):
+def sound_modification(triangles, List_amplitude_axis):
+    st.sidebar.write('Modified Audio')
     empty = st.sidebar.empty()
     empty.empty()
     modified_bins = []
 
     for i in range(0, 10):
         
-        
-            modified_bins.append(10**(traingles[i]/20)* List_amplitude_axis[i])
+            modified_bins.append(10**(triangles[i]/20)* List_amplitude_axis[i])
               
     mod_List_amplitude_axis = list(itertools.chain.from_iterable(modified_bins))
     return mod_List_amplitude_axis, empty
@@ -228,27 +261,33 @@ def inverse_fourier(mod_List_amplitude_axis, phase):
     mod = np.multiply(mod_List_amplitude_axis, np.exp(1j*phase))
     ifft_file = sc.fft.irfft(mod)
     return ifft_file
-def Traingle(length_wave):
+
+def Triangle(length_wave):
     window = signal.windows.blackman(length_wave)
     return window
-def plot_spectro(original_audio, modified_audio):
 
-   
-    
+def plot_spectro(original_audio, modified_audio):
+    original_spectro, modified_spectro= st.columns(2)
+
     D1     = librosa.stft(original_audio)             # STFT of y
     S_db1  = librosa.amplitude_to_db(np.abs(D1))
     D2     = librosa.stft(modified_audio) #             # STFT of y
     S_db2  = librosa.amplitude_to_db(np.abs(D2))
+    font = {'size': 7}
 
-    fig= plt.figure(figsize=[5,3])
-    plt.subplot(2,2,1)
-    img1 = librosa.display.specshow(S_db1, x_axis='time', y_axis='linear')
-    plt.subplot(2,2,2)
-    img2 = librosa.display.specshow(S_db2, x_axis='time', y_axis='linear')
-    fig.colorbar(img1, format="%+2.f dB")
-    fig.colorbar(img2, format="%+2.f dB")
+    plt.rc('font', **font)
+    fig= plt.figure(figsize=[12,7])
+
+    with original_spectro:
+        plt.subplot(2,2,1)
+        img1 = librosa.display.specshow(S_db1, x_axis='time', y_axis='linear')
+        fig.colorbar(img1, format="%+2.f dB")
+    with modified_spectro:
+        plt.subplot(2,2,2)
+        img2 = librosa.display.specshow(S_db2, x_axis='time', y_axis='linear')
+        fig.colorbar(img2, format="%+2.f dB")
     # fig.colorbar(img1, format="%+2.f dB")
     # fig.colorbar(img2, format="%+2.f dB")
-
+    fig.tight_layout(pad=1)
     st.pyplot(fig)
     
