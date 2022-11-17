@@ -124,53 +124,67 @@ st.markdown("""
         </style>
         """, unsafe_allow_html=True)
 st.set_option('deprecation.showPyplotGlobalUse', False)
-controls_column, main_column=st.columns([1,3])
+controls_column, main_column = st.columns([1, 3])
 controls_column.title("Equalizer Controls")
 
 # ---------------------------------------   Mode Selection
-Options = controls_column.selectbox('Mode', ('Audio', 'Music', 'Vowels', 'Arrhythmia'))
-#----------------------------------------   Common functions
+Options = controls_column.selectbox(
+    'Mode', ('Audio', 'Music', 'Vowels', 'Arrhythmia'))
+# ----------------------------------------   Common functions
 if Options == 'Arrhythmia':
-    ar.arrhythima(main_column,controls_column)
-else:    
-    Audio = controls_column.file_uploader(label='Upload your sound', label_visibility='hidden')
+    ar.arrhythima(main_column, controls_column)
+else:
+    Audio = controls_column.file_uploader(
+        label='Upload your sound', label_visibility='hidden')
     if Audio:
         # -----------------------  Orginal Sound
-        fn.audio_player(Audio,controls_column)
+        fn.audio_player(Audio, controls_column)
         # -----------------------  Loading Sound
         Audio_duration = fn.get_audio_duration(Audio)
         loaded_sound_file, sampling_rate = fn.sound_loading(Audio, 1)
-        original_time_axis = np.linspace(0, Audio_duration, len(loaded_sound_file))
+        original_time_axis = np.linspace(
+            0, Audio_duration, len(loaded_sound_file))
         # -----------------------  Audio processing
-        amplitude, phase, rfrequency = fn.fourier_transform(loaded_sound_file, sampling_rate)
-        
-        spectrogram_checkbox=controls_column.checkbox('Spectrogram')
+        amplitude, phase, rfrequency = fn.fourier_transform(
+            loaded_sound_file, sampling_rate)
+
+        spectrogram_checkbox = controls_column.checkbox('Spectrogram')
         if Options == 'Audio':
-            frequency_axis_list, amplitude_axis_list, bin_max_frequency_value = fn.bins_separation(rfrequency, amplitude)
-            Audio_sliders_data =fn.sliders_generation(frequency_axis_list[0][-1],main_column,10)
-            modified_amplitude, empty = fn.sound_modification(Audio_sliders_data, amplitude_axis_list,controls_column)
+            frequency_axis_list, amplitude_axis_list, bin_max_frequency_value = fn.bins_separation(
+                rfrequency, amplitude)
+            Audio_sliders_data = fn.sliders_generation(
+                frequency_axis_list[0][-1], main_column, 10)
+            modified_amplitude, empty = fn.sound_modification(
+                Audio_sliders_data, amplitude_axis_list, controls_column)
             phase = phase[:len(modified_amplitude)]
-            
+
         if Options == 'Music':
-                Audio_sliders_data =fn.sliders_generation(0,main_column,3)
-                modified_amplitude, empty = ms.music_modification(rfrequency, amplitude,Audio_sliders_data,controls_column)
+            Audio_sliders_data = fn.sliders_generation(0, main_column, 3)
+            modified_amplitude, empty = ms.music_modification(
+                rfrequency, amplitude, Audio_sliders_data, controls_column)
 
         if Options == 'Vowels':
-                Audio_sliders_data =fn.sliders_generation(0,main_column,5)
-                modified_amplitude, empty = vl.Vowels_modification(rfrequency, amplitude, Audio_sliders_data,main_column,controls_column)
-        #--------------------- Sound Processing
-        modified_time_axis = np.linspace(0, Audio_duration, len(modified_amplitude))
+            Audio_sliders_data = fn.sliders_generation(0, main_column, 5)
+            modified_amplitude, empty = vl.Vowels_modification(
+                rfrequency, amplitude, Audio_sliders_data, main_column, controls_column)
+        # --------------------- Sound Processing
+        modified_time_axis = np.linspace(
+            0, Audio_duration, len(modified_amplitude))
         ifft_file = fn.inverse_fourier(modified_amplitude, phase)
-        #--------------------- Sound Output 
-        song = ipd.Audio(ifft_file, rate=sampling_rate) 
+        # --------------------- Sound Output
+        song = ipd.Audio(ifft_file, rate=sampling_rate)
         empty.write(song)
-        #--------------------- Plotting Graphs
-        resulting_df , loaded_sound_file = fn.data_preparation(loaded_sound_file,modified_amplitude,original_time_axis,ifft_file)
+        # --------------------- Plotting Graphs
+        resulting_df, loaded_sound_file = fn.data_preparation(
+            loaded_sound_file, modified_amplitude, original_time_axis, ifft_file)
         if(not spectrogram_checkbox):
             lines = fn.altair_plot(resulting_df)
-            line_plot =main_column.altair_chart(lines)
-            fn.dynamic_plot(line_plot, resulting_df,controls_column)        
+            line_plot = main_column.altair_chart(lines)
+            st.session_state.counter = fn.dynamic_plot(
+                line_plot, resulting_df, controls_column)
+            st.session_state.counter = 0
+
         else:
-            fn.plot_spectrogram(loaded_sound_file, ifft_file,main_column)
+            fn.plot_spectrogram(loaded_sound_file, ifft_file, main_column)
     else:
         pass
