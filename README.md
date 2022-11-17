@@ -7,7 +7,7 @@
 ### Ahmed Emad    sec:1 BN:51
 ### Mohab Ghobashy sec:2 BN:47
 ### Hanya Ahmad   sec:2 BN:52
-### Omar Mostafa sec:2 BN:51
+### Omar Mostafa sec:2 BN:5
 ## Project Description:
 ### This project is a real-time frequency equalizer with five modes:
 
