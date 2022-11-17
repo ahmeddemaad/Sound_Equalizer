@@ -20,7 +20,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 
-def voice_changer(file,speed_rate):
+def voice_changer(file,speed_rate,main_column):
     loaded_sound_file, sampling_rate = librosa.load(file, sr=None)
     loaded_sound_file = librosa.effects.time_stretch(loaded_sound_file, rate=speed_rate)
     return loaded_sound_file ,sampling_rate

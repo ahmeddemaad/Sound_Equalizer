@@ -15,28 +15,24 @@ from scipy.fftpack import fft
 import streamlit_vertical_slider as svs
 
 
-def sliders_generation():
-    columns = st.columns(4)
+def sliders_generation(main_column):
+    instruments=["Drum","Guitar","Flute"]
+    columns = main_column.columns(3)
     sliders_data = []
-
-    for i in range(0, 4):
+    for i in range(0, 3):
         with columns[i]:
-
             value = svs.vertical_slider(
-                key=i, default_value=1, step=1, min_value=-20, max_value=20, slider_color= '#3182ce',thumb_color = 'black')
-            
-
+                key=i, default_value=1, step=1, min_value=0, max_value=20, slider_color= '#3182ce',thumb_color = 'black')
             if value == None:
                 value = 1
             sliders_data.append(value)
+            st.write(instruments[i])
     return sliders_data
 
 
-
-
-def music_modification(frequency, amplitude, sliders_data):
-    st.sidebar.write("Modified Audio")
-    empty = st.sidebar.empty()
+def music_modification(frequency, amplitude, sliders_data,controls_column):
+    controls_column.write("Modified Audio")
+    empty = controls_column.empty()
     empty.empty()
     index_drums = np.where((frequency >= 0) & (frequency < 1000))
 
@@ -49,10 +45,4 @@ def music_modification(frequency, amplitude, sliders_data):
     index_flute = np.where((frequency >= 2700) & (frequency < 25000))
     for i in index_flute:
         amplitude[i] = amplitude[i]*sliders_data[2]
-
-    # index_unwanted_amplitudes = np.where((amplitude < 200))
-    # st.write(index_unwanted_amplitudes)
-    # for i in index_unwanted_amplitudes:
-    #     amplitude[i] = 0
-    # st.write(amplitude)
     return amplitude, empty,

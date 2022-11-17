@@ -23,7 +23,6 @@ import altair as alt
 from scipy import signal
 import streamlit_nested_layout
 #-------------------------------------------------------------------player for audio-------------------------------------------------------------------#
-#-------------------------------------------------------------------session state variables-------------------------------------------------------------------#
 if 'start' not in st.session_state:
     st.session_state.start=0
 if 'size1' not in st.session_state:
@@ -31,10 +30,10 @@ if 'size1' not in st.session_state:
 
 #-------------------------------------------------------------------audio player-------------------------------------------------------------------#
 
-def audio_player(file):
-    st.sidebar.write("Original Audio")
-    st.sidebar.markdown('<style> h1 {color:white;} </style>')
-    st.sidebar.audio(file, format="audio/wav", start_time=0)
+def audio_player(file,controls_column):
+    controls_column.write("Original Audio")
+
+    controls_column.audio(file, format="audio/wav", start_time=0)
 
 
 
@@ -46,8 +45,8 @@ def get_audio_duration(file):
         return duration
 
 
-def uploader():
-    file = st.sidebar.file_uploader(label='Upload your sound', label_visibility='hidden')
+def uploader(controls_column):
+    file = controls_column.file_uploader(label='Upload your sound', label_visibility='hidden')
     return file
 
     #-------------------------------------------------------------------reading Audio -------------------------------------------------------------------#
@@ -65,42 +64,7 @@ fig = make_subplots(
     rows=2, cols=1,shared_xaxes=True,
     subplot_titles=("Original Audio","Modified Audio"))
     
-def make_chart(df, y_col, ymin, ymax,type):
-    if type=="original": 
-        row=1
-    elif type=="modified":
-        row=2
-    fig.add_trace(go.Scatter(x=df['time'], y=df[y_col], mode='lines'),row=row,col=1)
-    fig.update_layout(width=1200, height=500, xaxis_title='time',yaxis_title=y_col)
-    fig.update_traces(line_color="#3182ce")
-    st.write(fig)
-    fig.data=[]
-    fig.layout={}
-    
-def static_plot(x,y,type):
-    plot_spot = st.empty()
-    if type=="original": 
-        row=1
-    elif type=="modified":
-        row=2
-    fig.add_trace(go.Scatter(x=x, y=y, mode='lines'), row=row,col=1)
-    fig.update_layout(xaxis_title='time',yaxis_title='amplitude')
-    fig.update_traces(line_color="#3182ce")
-    st.write(fig)
-# def dynamic_plot(original_x, original_y,type):
-#     plot_spot = st.empty()
-#     original_dataframe = {'time': original_x, 'amplitude': original_y}
-#     original_df = pd.DataFrame(original_dataframe)
-#     length = len(original_df)
-#     original_ymax = max(original_df['amplitude'])
-#     original_ymin = min(original_df['amplitude'])
-#     rows_until_1sec = original_df['time'].loc[original_df['time'] <= float(1)]
-#     for i in range(0, length-1, 1500):
-#         original_df_tmp = original_df.iloc[i:i+len(rows_until_1sec)]
-#         with plot_spot:
-#             make_chart(original_df_tmp, 'amplitude', original_ymin, original_ymax,type)
-#         time.sleep(0.001)
-        
+
 
 def fourier_transform(loaded_sound_file, sampling_rate):
 
@@ -125,33 +89,21 @@ def bins_separation(frequency, amplitude):
             amplitude[i*bin_max_frequency_value:(i+1)*bin_max_frequency_value])
         i = i+1
     return frequency_axis_list, amplitude_axis_list, bin_max_frequency_value
-#-------------------------------------------------------------------sliders-generation-------------------------------------------------------------------#
+#-------------------------------------------------------------sliders-generation-------------------------------------------------------------------#
 
-
-def sliders_generation(bin_max_frequency_value,window):
-    columns = st.columns(10)
+def sliders_generation(max_freq_list,main_column):
+    columns = main_column.columns(10)
     sliders_data = []
-    triangles=[]
-
     for i in range(0, 10):
+        label=int(((i+1)*max_freq_list)+1)
         with columns[i]:
-            e = (i+1)*bin_max_frequency_value
             value = svs.vertical_slider(
-                key=i, default_value=0, step=1, min_value=-20, max_value=20,slider_color= '#3182ce',thumb_color = 'black')
-            st.write(f" { e } HZ")
-            if value == None   :
-                value = 0
-                triangles.append(value*np.ones(len(window)))
-            elif(value ==0):
-                triangles.append(value*np.ones(len(window)))
-                    
-            elif(value!=0 & value!=None):
-                 triangles.append(value*window)
-        
-                    
-            # sliders_data.append(value)
-    
-    return triangles
+                key=i, default_value=1, step=1, min_value=0, max_value=20, slider_color= '#3182ce',thumb_color = 'black')
+            if value == None:
+                value = 1
+            sliders_data.append(value)
+            st.write(f"{label}Hz")
+    return sliders_data
 
 def altair_plot(df):
     num_of_cols = len(df.axes[1])
@@ -168,8 +120,8 @@ def altair_plot(df):
         lines = alt.Chart(df).mark_line(color='#3182ce').encode(
                 x=alt.X('time', axis=alt.Axis(title='Time'),scale=alt.Scale(domain=(45, 51)) )
             ).properties(
-                width=1000,
-                height=500
+                width=1200,
+                height=700
             ).interactive()
         figure = lines.encode(y=alt.Y('amplitude',axis=alt.Axis(title='Amplitude')))
     return figure
@@ -199,34 +151,35 @@ def plot_animation(df):
         return figure
 
 
-def dynamic_plot(line_plot,df):
+def dynamic_plot(line_plot,df,controls_column):
    
-    col1, col2, col3 = st.sidebar.columns([0.5,0.5,0.5])
+    col1, col2, col3 = controls_column.columns([0.5,0.5,0.5])
     with col1:
         start_btn = st.button('Start',key='start_btn')
     with col2:
         pause_btn = st.button('Pause',key='pause')
     with col3:
         resume_btn = st.button('Resume',key='resume')
-    N = df.shape[0]  # number of elements in the dataframe
+    N = df.shape[0] 
     num_of_cols = len(df.axes[1])
     rows_until_45sec = df.loc[df['time'] <= float(47)]
     rows_until_51sec = df.loc[df['time'] <= float(51)]
   
-
     if(num_of_cols) ==2:
         df=df.loc[len(rows_until_45sec):len(rows_until_51sec)]
-        
-    burst = 10      # number of elements (months) to add to the plot
-    size = burst # size of the current dataset
+
+    burst = 150 
+    size = burst 
     if start_btn:
-        for i in range(1, N):
+        controls_column.write("first start")
+        for i in range(1, N-burst):
                     st.session_state.start=i  
-                    step_df = df.iloc[0:size]
+                    step_df = df.iloc[i:burst+i]
                     lines = plot_animation(step_df)
-                    line_plot = line_plot.altair_chart(lines)
+                    line_plot.altair_chart(lines)
                     size = i + burst
                     st.session_state.size1 = size
+        line_plot = line_plot.altair_chart(lines)
     elif resume_btn: 
             print(st.session_state.start)
             for i in range( st.session_state.start,N):
@@ -236,6 +189,7 @@ def dynamic_plot(line_plot,df):
                 line_plot = line_plot.altair_chart(lines)
                 st.session_state.size1 = size
                 size = i + burst
+               
                 time.sleep(.0000001)
                 
     elif pause_btn:
@@ -243,14 +197,15 @@ def dynamic_plot(line_plot,df):
             lines = plot_animation(step_df)
             line_plot = line_plot.altair_chart(lines)
             
-def sound_modification(triangles, amplitude_axis_list):
-    st.sidebar.write('Modified Audio')
-    empty = st.sidebar.empty()
+            
+def sound_modification(sliders_data, amplitude_axis_list,controls_column):
+    controls_column.write('Modified Audio')
+    empty = controls_column.empty()
     empty.empty()
     modified_bins = []
     for i in range(0, 10):
         
-            modified_bins.append(10**(triangles[i]/20)* amplitude_axis_list[i])
+            modified_bins.append((sliders_data[i])  *amplitude_axis_list[i])
               
     modified_amplitude_axis_list = list(itertools.chain.from_iterable(modified_bins))
     return modified_amplitude_axis_list, empty
@@ -265,8 +220,8 @@ def triangle(length_wave):
     window = signal.windows.blackman(length_wave)
     return window
 
-def plot_spectrogram(original_audio, modified_audio):
-    original_spectro, modified_spectro= st.columns(2)
+def plot_spectrogram(original_audio, modified_audio,main_column):
+    original_spectro, modified_spectro= main_column.columns(2)
 
     D1     = librosa.stft(original_audio)             # STFT of y
     S_db1  = librosa.amplitude_to_db(np.abs(D1))
@@ -288,5 +243,5 @@ def plot_spectrogram(original_audio, modified_audio):
     # fig.colorbar(img1, format="%+2.f dB")
     # fig.colorbar(img2, format="%+2.f dB")
     fig.tight_layout(pad=1)
-    st.pyplot(fig)
+    main_column.pyplot(fig)
     

@@ -20,13 +20,13 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from scipy.misc import electrocardiogram
 import functions as fn
+import streamlit_nested_layout
 
 
-
-def arrhythima():
+def arrhythima(main_column,controls_column):
     ''' if 'arrhythmia_slider' not in st.session_state:
         st.session_state.arrhythmia_slider=1 '''
-    col1,col2=st.columns([1,.001])
+    col1,col2=main_column.columns([1,.001])
     ecg = electrocardiogram()
     fs = 360
     time = np.arange(ecg.size) / fs
@@ -34,7 +34,7 @@ def arrhythima():
     fourier_x_axis = sc.fft.rfftfreq(len(ecg), (time[1]-time[0]))
     fourier_y_axis = sc.fft.rfft(ecg)
     
-    value = st.slider(label="Arrhythmia", min_value=0,
+    value = controls_column.slider(label="Arrhythmia", min_value=0,
                       max_value=10, value=1, key=12)
     points_per_freq = len(fourier_x_axis) / (fourier_x_axis[-1])
     
@@ -44,6 +44,6 @@ def arrhythima():
     with col1:
         lines = fn.altair_plot(df)
         line_plot = st.altair_chart(lines)
-        fn.dynamic_plot(line_plot, df)
+        fn.dynamic_plot(line_plot, df,controls_column)
    
   #'''   st.write( st.session_state.arrhythmia_slider) '''
