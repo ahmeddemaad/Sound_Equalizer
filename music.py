@@ -16,14 +16,15 @@ import streamlit_vertical_slider as svs
 
 
 def sliders_generation():
-    columns = st.columns(3)
+    columns = st.columns(4)
     sliders_data = []
 
-    for i in range(0, 3):
+    for i in range(0, 4):
         with columns[i]:
 
             value = svs.vertical_slider(
                 key=i, default_value=1, step=1, min_value=-20, max_value=20, slider_color= '#3182ce',thumb_color = 'black')
+            
 
             if value == None:
                 value = 1

@@ -248,8 +248,6 @@ def sound_modification(triangles, amplitude_axis_list):
     empty = st.sidebar.empty()
     empty.empty()
     modified_bins = []
-    st.write(np.array(triangles).shape)
-    st.write(np.array(amplitude_axis_list).shape)
     for i in range(0, 10):
         
             modified_bins.append(10**(triangles[i]/20)* amplitude_axis_list[i])

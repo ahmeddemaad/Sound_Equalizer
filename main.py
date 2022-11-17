@@ -29,9 +29,10 @@ st.set_page_config(layout="wide", page_title="Equalizer")
 st.markdown("""
         <style>
                 .css-18e3th9{
-                    margin-top: -64px;
-                  
-                
+                    margin-top: -120px;
+                    margin-left: 40px;
+                    overflow-y:hidden;
+                    overflow-x:hidden;
                     }
 
                 .css-1qaq3qt{
@@ -58,8 +59,12 @@ st.markdown("""
                .css-ocqkz7{
                 gap:0px;
                 margin-top: 10px;
+                margin-left: 10px;
                }
-               
+               .css-12w0qpk{
+                    margin-left: 16px;
+               }
+
                .css-1g7xoqr{
                 
                     margin-block-start: -1.4%;
@@ -69,7 +74,7 @@ st.markdown("""
                     margin-bottom: -38px;
                 }
                 .css-1gugvky{
-                    margin-inline: -3%;
+                    margin-inline: -4%;
                }
                .css-ocqkz-e1tzin5v4{
                 margin-inline-start: 35%;
@@ -135,8 +140,11 @@ if options == 'Audio':
         window=fn.triangle(bin_max_frequency_value)
         
         if 'triangles' not in st.session_state:
-            st.session_state.triangles=[0*np.ones(len(window))]*10
-        st.write("here",np.array(st.session_state.triangles).shape)
+            st.write("not in state")
+            st.session_state.triangles=[]
+        
+        st.session_state.triangles = fn.sliders_generation(bin_max_frequency_value,window)
+       
         
         modified_amplitude_axis_list, empty = fn.sound_modification(
             st.session_state.triangles, amplitude_axis_list)
@@ -166,16 +174,16 @@ if options == 'Audio':
             fn.dynamic_plot(line_plot, resulting_df)
         else:
             fn.plot_spectrogram(loaded_sound_file, ifft_file)
-        if 'triangles' in st.session_state:
-            st.session_state.triangles = fn.sliders_generation(bin_max_frequency_value,window)
-            
+
+        
 
 if options == 'Music':
     Music = fn.uploader()
     spectrogram_checkbox=st.sidebar.checkbox('Spectrogram')
     if Music:
         if 'music_sliders_data' not in st.session_state:
-            st.session_state.music_sliders_data=[1]*3
+            st.session_state.music_sliders_data=[]
+        st.session_state.music_sliders_data = ms.sliders_generation()
             
         fn.audio_player(Music)
         loaded_sound_file, sampling_rate = fn.sound_loading(Music, 1)
@@ -184,6 +192,7 @@ if options == 'Music':
             0, audio_duration, len(loaded_sound_file))
         amplitude, phase, rfrequency = fn.fourier_transform(
             loaded_sound_file, sampling_rate)
+        
         modified_amplitude, empty = ms.music_modification(
             rfrequency, amplitude, st.session_state.music_sliders_data)
         modified_time_axis = np.linspace(
@@ -209,8 +218,7 @@ if options == 'Music':
             fn.dynamic_plot(line_plot, resulting_df)
         else:
             fn.plot_spectrogram(loaded_sound_file, ifft_file) 
-        if 'music_sliders_data' in st.session_state:
-            st.session_state.music_sliders_data = ms.sliders_generation()
+        
     else:
         pass
 if options == 'Arrhythmia':
@@ -222,19 +230,18 @@ if options == 'Voice Changer':
         st.write(
             '<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
         voice = st.radio(
-            'Voice', options=["Deep Voice", "Smooth Voice"])
+            'Voice', options=["Low Pitch", "High Pitch"])
         fn.audio_player(Sound)
         speed_rate = 1.4
         sampling_rate_factor = 1.4
+        st.write("Modified Audio")
         empty = st.empty()
-        if voice == "Deep Voice":
-        
+        if voice == "Low Pitch":
             empty.empty()
             speed_rate = 1.4
             sampling_rate_factor = 1.4
         else:
-            
-            empty = st.sidebar.empty()
+
             empty.empty()
             speed_rate = 0.5
             sampling_rate_factor = 0.5
