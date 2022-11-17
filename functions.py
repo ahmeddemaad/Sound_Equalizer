@@ -238,4 +238,3 @@ def plot_spectrogram(original_audio, modified_audio,main_column):
 
     fig.tight_layout(pad=1)
     main_column.pyplot(fig)
-    

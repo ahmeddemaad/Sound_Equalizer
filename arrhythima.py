@@ -34,8 +34,7 @@ def arrhythima(main_column,controls_column):
     fourier_x_axis = sc.fft.rfftfreq(len(ecg), (time[1]-time[0]))
     fourier_y_axis = sc.fft.rfft(ecg)
     
-    value = controls_column.slider(label="Arrhythmia", min_value=0,
-                      max_value=10, value=1, key=12)
+    value = controls_column.slider(label="Arrhythmia", min_value=0,max_value=10, value=1, key=12)
     points_per_freq = len(fourier_x_axis) / (fourier_x_axis[-1])
     
     fourier_y_axis[int(points_per_freq*1):int(points_per_freq * 5)] *= value
