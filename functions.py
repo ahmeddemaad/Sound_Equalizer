@@ -31,7 +31,7 @@ if 'size1' not in st.session_state:
 
 #-------------------------------------------------------------------audio player-------------------------------------------------------------------#
 
-def Audio_player(file):
+def audio_player(file):
     st.sidebar.write("Original Audio")
     st.sidebar.markdown('<style> h1 {color:white;} </style>')
     st.sidebar.audio(file, format="audio/wav", start_time=0)
@@ -46,14 +46,14 @@ def get_audio_duration(file):
         return duration
 
 
-def Uploader():
+def uploader():
     file = st.sidebar.file_uploader(label='Upload your sound', label_visibility='hidden')
     return file
 
     #-------------------------------------------------------------------reading Audio -------------------------------------------------------------------#
 
 
-def Sound_loading(file,speed_rate):
+def sound_loading(file,speed_rate):
     loaded_sound_file, sampling_rate = librosa.load(file, sr=None)
    
     # speed_rate=st.slider(label="speed Rate",min_value= 0.1 , max_value=2.0 ,value=1.0)
@@ -102,7 +102,7 @@ def static_plot(x,y,type):
 #         time.sleep(0.001)
         
 
-def Fourier_operations(loaded_sound_file, sampling_rate):
+def fourier_transform(loaded_sound_file, sampling_rate):
 
     fft_file = sc.fft.rfft(loaded_sound_file)
     amplitude = np.abs(fft_file)
@@ -114,22 +114,21 @@ def Fourier_operations(loaded_sound_file, sampling_rate):
 
 
 def bins_separation(frequency, amplitude):
-    List_freq_axis = []
-    List_amplitude_axis = []
+    frequency_axis_list = []
+    amplitude_axis_list = []
     bin_max_frequency_value = int(len(frequency)/10)
-    
     i = 0
     while(i < 10):
-        List_freq_axis.append(
+        frequency_axis_list.append(
             frequency[i*bin_max_frequency_value: (i+1)*bin_max_frequency_value])
-        List_amplitude_axis.append(
+        amplitude_axis_list.append(
             amplitude[i*bin_max_frequency_value:(i+1)*bin_max_frequency_value])
         i = i+1
-    return List_freq_axis, List_amplitude_axis, bin_max_frequency_value
+    return frequency_axis_list, amplitude_axis_list, bin_max_frequency_value
 #-------------------------------------------------------------------sliders-generation-------------------------------------------------------------------#
 
 
-def Sliders_generation(bin_max_frequency_value,window):
+def sliders_generation(bin_max_frequency_value,window):
     columns = st.columns(10)
     sliders_data = []
     triangles=[]
@@ -148,10 +147,10 @@ def Sliders_generation(bin_max_frequency_value,window):
                     
             elif(value!=0 & value!=None):
                  triangles.append(value*window)
-            
+        
                     
             # sliders_data.append(value)
-
+    
     return triangles
 
 def altair_plot(df):
@@ -163,7 +162,8 @@ def altair_plot(df):
                 width=500,
                 height=300
             ).interactive()
-        figure = lines.encode(y=alt.Y('amplitude',axis=alt.Axis(title='Amplitude'))) | lines.encode(y ='modified_amplitude')
+        figure = lines.encode(y=alt.Y('amplitude',axis=alt.Axis(title='Amplitude'))) | lines.encode(
+            y =alt.Y('modified_amplitude', axis=alt.Axis(title='Modified Amplitude')))
     else:
         lines = alt.Chart(df).mark_line(color='#3182ce').encode(
                 x=alt.X('time', axis=alt.Axis(title='Time'),scale=alt.Scale(domain=(45, 51)) )
@@ -185,7 +185,7 @@ def plot_animation(df):
             width=500,
             height=300
         ).interactive()
-            figure = chart1.encode(y=alt.Y('amplitude',axis=alt.Axis(title='Amplitude'))) | chart1.encode(y ='modified_amplitude')
+            figure = chart1.encode(y=alt.Y('amplitude',axis=alt.Axis(title='Amplitude'))) | chart1.encode( y =alt.Y('modified_amplitude', axis=alt.Axis(title='Modified Amplitude')))
         else:
             chart1 = alt.Chart(df).mark_line(color="#3182ce").encode(
             x=alt.X('time', axis=alt.Axis(title='Time'))
@@ -243,30 +243,31 @@ def dynamic_plot(line_plot,df):
             lines = plot_animation(step_df)
             line_plot = line_plot.altair_chart(lines)
             
-def sound_modification(triangles, List_amplitude_axis):
+def sound_modification(triangles, amplitude_axis_list):
     st.sidebar.write('Modified Audio')
     empty = st.sidebar.empty()
     empty.empty()
     modified_bins = []
-
+    st.write(np.array(triangles).shape)
+    st.write(np.array(amplitude_axis_list).shape)
     for i in range(0, 10):
         
-            modified_bins.append(10**(triangles[i]/20)* List_amplitude_axis[i])
+            modified_bins.append(10**(triangles[i]/20)* amplitude_axis_list[i])
               
-    mod_List_amplitude_axis = list(itertools.chain.from_iterable(modified_bins))
-    return mod_List_amplitude_axis, empty
+    modified_amplitude_axis_list = list(itertools.chain.from_iterable(modified_bins))
+    return modified_amplitude_axis_list, empty
 
 
-def inverse_fourier(mod_List_amplitude_axis, phase):
-    mod = np.multiply(mod_List_amplitude_axis, np.exp(1j*phase))
+def inverse_fourier(modified_amplitude_axis_list, phase):
+    mod = np.multiply(modified_amplitude_axis_list, np.exp(1j*phase))
     ifft_file = sc.fft.irfft(mod)
     return ifft_file
 
-def Triangle(length_wave):
+def triangle(length_wave):
     window = signal.windows.blackman(length_wave)
     return window
 
-def plot_spectro(original_audio, modified_audio):
+def plot_spectrogram(original_audio, modified_audio):
     original_spectro, modified_spectro= st.columns(2)
 
     D1     = librosa.stft(original_audio)             # STFT of y

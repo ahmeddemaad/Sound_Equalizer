@@ -22,13 +22,15 @@ from multiprocessing import Process
 from streamlit_option_menu import option_menu
 import altair as alt
 from scipy import signal
+import vowels as vl
 
 
 st.set_page_config(layout="wide", page_title="Equalizer")
 st.markdown("""
         <style>
                 .css-18e3th9{
-                    margin-top: -60px;
+                    margin-top: -64px;
+                  
                 
                     }
 
@@ -50,7 +52,7 @@ st.markdown("""
                .css-1cc1g65{
                 gap:0px;
                }
-               ..css-f6bu01{
+               .css-f6bu01{
                 gap:-1rem;
                }
                .css-ocqkz7{
@@ -87,7 +89,7 @@ st.markdown("""
                     margin-top: -10px;
                 }
                 
-                .css-u5r6vw.e16nr0p34 #$0{
+                .css-u5r6vw.e16nr0p34 {
                     margin-top:10px;
                 }
                 .stAudio{
@@ -113,70 +115,48 @@ options = st.sidebar.selectbox(
 
 controls_column, main_column=st.columns([1,2])
 
-
 if options == 'Audio':
-    # ----------------------------------------------- importing sound
-    Sound = fn.Uploader()
+    #----------------------------------------------- importing sound-----------------------------------------------#
+    audio = fn.uploader()
     spectrogram_checkbox=st.sidebar.checkbox('Spectrogram')
-    if Sound:
-        if 'triangles' not in st.session_state:
-            st.session_state.triangles=[0] *10
-        fn.Audio_player(Sound)
-        audio_duration = fn.get_audio_duration(Sound)
-        loaded_sound_file, sampling_rate = fn.Sound_loading(Sound, 1)
-        # make an array for time with the same length as the sampled audio file
+    if audio:
+        
+    
+        fn.audio_player(audio)
+        audio_duration = fn.get_audio_duration(audio)
+        loaded_sound_file, sampling_rate = fn.sound_loading(audio, 1)
         original_time_axis = np.linspace(
             0, audio_duration, len(loaded_sound_file))
-        # plot original audio in time domain (dynamic)
-
-        amplitude, phase, rfrequency = fn.Fourier_operations(
+        amplitude, phase, rfrequency = fn.fourier_transform(
             loaded_sound_file, sampling_rate)
-        # rfrequency,amplitude= fn.magnitude_spectrum_ (amplitude,sampling_rate, 1 )
-        #ax = plt.figure(figsize=(10, 8))
-        List_freq_axis, List_amplitude_axis, bin_max_frequency_value = fn.bins_separation(
+      
+        frequency_axis_list, amplitude_axis_list, bin_max_frequency_value = fn.bins_separation(
             rfrequency, amplitude)
-        window=fn.Triangle(bin_max_frequency_value)
-       
-        mod_List_amplitude_axis, empty = fn.sound_modification(
-            st.session_state.triangles, List_amplitude_axis)
+        window=fn.triangle(bin_max_frequency_value)
+        
+        if 'triangles' not in st.session_state:
+            st.session_state.triangles=[0*np.ones(len(window))]*10
+        st.write("here",np.array(st.session_state.triangles).shape)
+        
+        modified_amplitude_axis_list, empty = fn.sound_modification(
+            st.session_state.triangles, amplitude_axis_list)
+        
         modified_time_axis = np.linspace(
-            0, audio_duration, len(mod_List_amplitude_axis))
-        phase = phase[:len(mod_List_amplitude_axis):1]
-        # fn.dynamic_plot(original_time_axis.tolist(),loaded_sound_file.tolist(),"original")
-        # fn.dynamic_plot(modified_time_axis.tolist(),mod_List_amplitude_axis,"modified")
-        # generate = st.button('Generate')
-        ifft_file = fn.inverse_fourier(mod_List_amplitude_axis, phase)
-        # generate=st.button('Generate')
-        # if generate:
+            0, audio_duration, len(modified_amplitude_axis_list))
+        phase = phase[:len(modified_amplitude_axis_list):1]
+
+        ifft_file = fn.inverse_fourier(modified_amplitude_axis_list, phase)
+
         song = ipd.Audio(ifft_file, rate=sampling_rate)
         empty.write(song)
-        rfrequency = rfrequency[:len(mod_List_amplitude_axis):1]
+        rfrequency = rfrequency[:len(modified_amplitude_axis_list):1]
         loaded_sound_file = loaded_sound_file[:len(ifft_file)]
-        mod_List_amplitude_axis = mod_List_amplitude_axis[:len(ifft_file)]
+        modified_amplitude_axis_list = modified_amplitude_axis_list[:len(ifft_file)]
         original_time_axis = original_time_axis[:len(ifft_file)]
-        # st.write("ifft", ifft_file)
-        # ax = plt.figure(figsize=(10, 8))
-
-        # plt.plot(rfrequency, mod_List_amplitude_axis, color='black')
-        # st.plotly_chart(ax)
-        # Altair starts here
-        # original_df = pd.DataFrame({'time': original_time_axis[::500], 'amplitude': loaded_sound_file[:: 500], 'modified_amplitude': ifft_file[::500]}, columns=[
-        #     'time', 'amplitude', 'modified_amplitude'])
-
-        # lines = fn.altair_plot(original_df)
-        # line_plot = st.altair_chart(lines)
-        # start_btn = st.button('Start')
-        # ax = plt.figure(figsize=(10, 8))
-        # amplitude = amplitude[:len(rfrequency)]
-        # plt.plot(rfrequency, amplitude, color='black')
-
-        # st.plotly_chart(ax)
-        
         loaded_sound_file = loaded_sound_file[:len(ifft_file)]
-        mod_List_amplitude_axis = mod_List_amplitude_axis[:len(ifft_file)]
+        modified_amplitude_axis_list = modified_amplitude_axis_list[:len(ifft_file)]
         original_time_axis = original_time_axis[:len(ifft_file)]
 
-        # Altair starts here
         resulting_df = pd.DataFrame({'time': original_time_axis[::500], 'amplitude': loaded_sound_file[:: 500], 'modified_amplitude': ifft_file[::500]}, columns=[
             'time', 'amplitude', 'modified_amplitude'])
         
@@ -185,31 +165,25 @@ if options == 'Audio':
             line_plot = st.altair_chart(lines)
             fn.dynamic_plot(line_plot, resulting_df)
         else:
-            fn.plot_spectro(loaded_sound_file, ifft_file)
+            fn.plot_spectrogram(loaded_sound_file, ifft_file)
         if 'triangles' in st.session_state:
-            st.session_state.triangles = fn.Sliders_generation(bin_max_frequency_value,window)
+            st.session_state.triangles = fn.sliders_generation(bin_max_frequency_value,window)
             
-        # #ax = plt.figure(figsize=(10, 8))
-        # amplitude = amplitude[:len(rfrequency)]
-        # #plt.plot(rfrequency, amplitude, color='black')
-        # #st.plotly_chart(ax)
-
 
 if options == 'Music':
-    Music = fn.Uploader()
+    Music = fn.uploader()
     spectrogram_checkbox=st.sidebar.checkbox('Spectrogram')
     if Music:
         if 'music_sliders_data' not in st.session_state:
             st.session_state.music_sliders_data=[1]*3
             
-        fn.Audio_player(Music)
-        loaded_sound_file, sampling_rate = fn.Sound_loading(Music, 1)
+        fn.audio_player(Music)
+        loaded_sound_file, sampling_rate = fn.sound_loading(Music, 1)
         audio_duration = fn.get_audio_duration(Music)
         original_time_axis = np.linspace(
             0, audio_duration, len(loaded_sound_file))
-        amplitude, phase, rfrequency = fn.Fourier_operations(
+        amplitude, phase, rfrequency = fn.fourier_transform(
             loaded_sound_file, sampling_rate)
-        #sliders_data = ms.Sliders_generation()
         modified_amplitude, empty = ms.music_modification(
             rfrequency, amplitude, st.session_state.music_sliders_data)
         modified_time_axis = np.linspace(
@@ -222,7 +196,7 @@ if options == 'Music':
         ax = plt.figure(figsize=(10, 8))
 
         loaded_sound_file = loaded_sound_file[:len(ifft_file)]
-        mod_List_amplitude_axis = modified_amplitude[:len(ifft_file)]
+        modified_amplitude_axis_list = modified_amplitude[:len(ifft_file)]
         original_time_axis = original_time_axis[:len(ifft_file)]
 
         # Altair starts here
@@ -234,44 +208,71 @@ if options == 'Music':
             line_plot = st.altair_chart(lines)
             fn.dynamic_plot(line_plot, resulting_df)
         else:
-            fn.plot_spectro(loaded_sound_file, ifft_file) 
+            fn.plot_spectrogram(loaded_sound_file, ifft_file) 
         if 'music_sliders_data' in st.session_state:
-            st.session_state.music_sliders_data = ms.Sliders_generation()
-       
-        #fn.static_plot(original_time_axis.tolist(), loaded_sound_file.tolist(),"original")
-        # fn.static_plot(modified_time_axis.tolist(),modified_amplitude,"modified")
-        # fn.dynamic_plot(original_time_axis.tolist(),loaded_sound_file.tolist(),"original")
-        # fn.dynamic_plot(modified_time_axis.tolist(),modified_amplitude,"modified")
-        # plt.plot(rfrequency, modified_amplitude, color='black')
-        # st.plotly_chart(ax)
+            st.session_state.music_sliders_data = ms.sliders_generation()
     else:
         pass
 if options == 'Arrhythmia':
     ar.arrhythima()
 if options == 'Voice Changer':
-    Sound = fn.Uploader()
-    spectrogram_checkbox=st.sidebar.checkbox('Spectrogram')
-
+    Sound = fn.uploader()
+    #spectrogram_checkbox=st.sidebar.checkbox('Spectrogram')
     if Sound:
         st.write(
             '<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
         voice = st.radio(
             'Voice', options=["Deep Voice", "Smooth Voice"])
-        fn.Audio_player(Sound)
+        fn.audio_player(Sound)
         speed_rate = 1.4
         sampling_rate_factor = 1.4
+        empty = st.empty()
         if voice == "Deep Voice":
-            empty = st.sidebar.empty()
+        
             empty.empty()
             speed_rate = 1.4
             sampling_rate_factor = 1.4
-        elif voice == "Smooth Voice":
+        else:
+            
             empty = st.sidebar.empty()
             empty.empty()
             speed_rate = 0.5
             sampling_rate_factor = 0.5
 
-        loaded_sound_file, sampling_rate = vc.Voice_changer(Sound, speed_rate)
+        loaded_sound_file, sampling_rate = vc.voice_changer(Sound, speed_rate)
         song = ipd.Audio(loaded_sound_file, rate=sampling_rate /
                          sampling_rate_factor)
         empty.write(song)
+
+if options == 'Vowels':
+    Vowels = fn.uploader()
+    if Vowels:
+        fn.audio_player(Vowels)
+        audio_duration=fn.get_audio_duration(Vowels)
+        loaded_sound_file, sampling_rate = fn.sound_loading(Vowels, 1)
+        original_time_axis = np.linspace(
+            0, audio_duration, len(loaded_sound_file)) 
+        
+
+        time_df=pd.DataFrame({'time': original_time_axis[::100],'amplitude': loaded_sound_file[::100]})
+        certain_time_df=time_df[time_df['time']<=0.5]
+        st.write(certain_time_df)
+        amplitude, phase, rfrequency = fn.fourier_transform(
+            loaded_sound_file, sampling_rate)
+        df=pd.DataFrame({'frequency':rfrequency, 'amplitude':amplitude})
+       
+        
+        certain_frequencies_df= df[df['frequency']>=10000]
+      
+        sliders_data = vl.sliders_generation()
+        modified_amplitude, empty = vl.vowel_modifier(
+            rfrequency, amplitude, sliders_data)
+        
+        ifft_file = fn.inverse_fourier(modified_amplitude, phase)
+        song = ipd.Audio(ifft_file, rate=sampling_rate)
+        empty.write(song)
+        ax = plt.figure(figsize=(10, 8))
+        plt.plot(rfrequency, modified_amplitude, color='black')
+        st.plotly_chart(ax)
+    else:
+        pass

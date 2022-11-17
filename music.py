@@ -15,7 +15,7 @@ from scipy.fftpack import fft
 import streamlit_vertical_slider as svs
 
 
-def Sliders_generation():
+def sliders_generation():
     columns = st.columns(3)
     sliders_data = []
 
