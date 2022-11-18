@@ -10,7 +10,7 @@ streamlit run main.py
 ```
 
 ## Project Description
-### A real-time frequency equalizer web application developed using python and streamlit
+### A real-time frequency equalizer web application developed using python and streamlit with four modes.
 
 1. Default audio mode where all frequencies are divided into ten bands where users can alter the amplitudes of those frequencies through vertical sliders.
 ![Screenshot (103)](https://user-images.githubusercontent.com/93945902/202715878-1dbc1b08-91d5-4409-8e81-2d027272f9d7.png)
