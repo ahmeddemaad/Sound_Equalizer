@@ -48,9 +48,6 @@ def sound_loading(file, speed_rate):
 
 
     #-------------------------------------------------------------------processing-------------------------------------------------------------------#
-fig = make_subplots(
-    rows=2, cols=1, shared_xaxes=True,
-    subplot_titles=("Original Audio", "Modified Audio"))
 
 
 def fourier_transform(loaded_sound_file, sampling_rate):
@@ -102,6 +99,25 @@ def sliders_generation(max_freq_list, main_column, number_of_sliders):
                 st.write(vowels[i])
     return sliders_data
 
+    
+def sound_modification(sliders_data, amplitude_axis_list, controls_column):
+    controls_column.write('Modified Audio')
+    empty = controls_column.empty()
+    empty.empty()
+    modified_bins = []
+    for i in range(0, 10):
+        modified_bins.append((sliders_data[i]) * amplitude_axis_list[i])
+    modified_amplitude_axis_list = list(
+        itertools.chain.from_iterable(modified_bins))
+    return modified_amplitude_axis_list, empty
+
+
+def inverse_fourier(modified_amplitude_axis_list, phase):
+    mod = np.multiply(modified_amplitude_axis_list, np.exp(1j*phase))
+    ifft_file = sc.fft.irfft(mod)
+    return ifft_file
+
+# -------------------------------- plotting
 
 def data_preparation(loaded_sound_file, modified_amplitude_axis_list, original_time_axis, ifft_file):
     loaded_sound_file = loaded_sound_file[:len(ifft_file)]
@@ -172,28 +188,6 @@ def dynamic_plot(line_plot, df, controls_column,main_column,width,height):
 
     return st.session_state.counter
 
-
-def sound_modification(sliders_data, amplitude_axis_list, controls_column):
-    controls_column.write('Modified Audio')
-    empty = controls_column.empty()
-    empty.empty()
-    modified_bins = []
-    for i in range(0, 10):
-        modified_bins.append((sliders_data[i]) * amplitude_axis_list[i])
-    modified_amplitude_axis_list = list(
-        itertools.chain.from_iterable(modified_bins))
-    return modified_amplitude_axis_list, empty
-
-
-def inverse_fourier(modified_amplitude_axis_list, phase):
-    mod = np.multiply(modified_amplitude_axis_list, np.exp(1j*phase))
-    ifft_file = sc.fft.irfft(mod)
-    return ifft_file
-
-
-def triangle(length_wave):
-    window = signal.windows.blackman(length_wave)
-    return window
 
 
 def plot_spectrogram(original_audio, modified_audio, main_column):
