@@ -12,13 +12,15 @@ st.markdown("""
                 .css-qri22k{
                     visibility:hidden;
                     padding:-17.5rem 1rem;   
+                    height: 10px;
+                    
                 }
                 .css-18e3th9{
                     margin-top: -100px;
                     margin-left: -187px;
-                    overflow-y:hidden;
-                    
+                    overflow:hidden;
                     }
+
 
                 .css-1qaq3qt{
                     width:100%;
@@ -121,6 +123,11 @@ st.markdown("""
                         margin-top: -100px;
     margin-left: -71px;
                 }
+                div.stButton{
+                    margin-left:50%;
+                    margin-top:-15px;
+                }
+                
         </style>
         """, unsafe_allow_html=True)
 st.set_option('deprecation.showPyplotGlobalUse', False)
@@ -178,12 +185,11 @@ else:
         resulting_df, loaded_sound_file = fn.data_preparation(
             loaded_sound_file, modified_amplitude, original_time_axis, ifft_file)
         if(not spectrogram_checkbox):
-            lines = fn.altair_plot(resulting_df)
+            lines,width,height = fn.altair_plot(resulting_df,500,300)
             line_plot = main_column.altair_chart(lines)
             st.session_state.counter = fn.dynamic_plot(
-                line_plot, resulting_df, controls_column)
+                line_plot, resulting_df, controls_column,main_column,width,height)
             st.session_state.counter = 0
-
         else:
             fn.plot_spectrogram(loaded_sound_file, ifft_file, main_column)
     else:

@@ -17,10 +17,10 @@ import streamlit_nested_layout
 
 
 #-------------------------------------------------------------------player for audio-------------------------------------------------------------------#
-if 'start' not in st.session_state:
-    st.session_state.start = 0
+
 if 'size1' not in st.session_state:
     st.session_state.size1 = 0
+
 
 #-------------------------------------------------------------------audio player-------------------------------------------------------------------#
 
@@ -42,7 +42,6 @@ def get_audio_duration(file):
 
 def sound_loading(file, speed_rate):
     loaded_sound_file, sampling_rate = librosa.load(file, sr=None)
-    # speed_rate=st.slider(label="speed Rate",min_value= 0.1 , max_value=2.0 ,value=1.0)
     loaded_sound_file = librosa.effects.time_stretch(
         loaded_sound_file, rate=speed_rate)
     return loaded_sound_file, sampling_rate
@@ -109,125 +108,69 @@ def data_preparation(loaded_sound_file, modified_amplitude_axis_list, original_t
     modified_amplitude_axis_list = modified_amplitude_axis_list[:len(
         ifft_file)]
     original_time_axis = original_time_axis[:len(ifft_file)]
-    resulting_df = pd.DataFrame({'time': original_time_axis[::500], 'amplitude': loaded_sound_file[:: 500],
+    resulting_df = pd.DataFrame({'time': original_time_axis[::500], 'amplitude': loaded_sound_file[::500],
                                 'modified_amplitude': ifft_file[::500]}, columns=['time', 'amplitude', 'modified_amplitude'])
     return resulting_df, loaded_sound_file
 
 
-def altair_plot(df):
-    num_of_cols = len(df.axes[1])
-    if(num_of_cols) == 3:
-        lines = alt.Chart(df).mark_line(color='#3182ce').encode(
-            x=alt.X('time', axis=alt.Axis(title='Time'))
-        ).properties(
-            width=500,
-            height=300
-        ).interactive()
-        figure = lines.encode(y=alt.Y('amplitude', axis=alt.Axis(title='Amplitude'))) | lines.encode(
-            y=alt.Y('modified_amplitude', axis=alt.Axis(title='Modified Amplitude')))
-    else:
-        lines = alt.Chart(df).mark_line(color='#3182ce').encode(
-            x=alt.X('time', axis=alt.Axis(title='Time'),
-                    scale=alt.Scale(domain=(45, 51)))
-        ).properties(
-            width=1200,
-            height=700
-        ).interactive()
-        figure = lines.encode(
-            y=alt.Y('amplitude', axis=alt.Axis(title='Amplitude')))
-    return figure
+def altair_plot(df,width,height):
+
+    lines = alt.Chart(df).mark_line(color='#3182ce').encode(
+        x=alt.X('time', axis=alt.Axis(title='Time')),
+    ).properties(
+        width=width,
+        height=height
+    ).interactive()
+
+    figure = lines.encode(y=alt.Y('amplitude', axis=alt.Axis(title='Amplitude'))) | lines.encode(
+        y=alt.Y('modified_amplitude', axis=alt.Axis(title='Modified Amplitude')))
+
+    return figure,width,height
 
 
-def plot_animation(df):
-    num_of_cols = len(df.axes[1])
-    if(num_of_cols) == 3:
-        chart1 = alt.Chart(df).mark_line(color="#3182ce").encode(
-            x=alt.X('time', axis=alt.Axis(title='Time')),
-            # y=alt.Y('amplitude', axis=alt.Axis(title='Amplitude')),
-        ).properties(
-            width=500,
-            height=300
-        ).interactive()
-        figure = chart1.encode(y=alt.Y('amplitude', axis=alt.Axis(title='Amplitude'))) | chart1.encode(
-            y=alt.Y('modified_amplitude', axis=alt.Axis(title='Modified Amplitude')))
-    else:
-        chart1 = alt.Chart(df).mark_line(color="#3182ce").encode(
-            x=alt.X('time', axis=alt.Axis(title='Time'))
-            # y=alt.Y('amplitude', axis=alt.Axis(title='Amplitude')),
-        ).properties(
-            width=1000,
-            height=500
-        ).interactive()
 
-        figure = chart1.encode(
-            y=alt.Y('amplitude', axis=alt.Axis(title='Amplitude')))
-    return figure
-
-
-def dynamic_plot(line_plot, df, controls_column):
-    col1, col2, col3 = controls_column.columns([0.5, 0.5, 0.5])
+def dynamic_plot(line_plot, df, controls_column,main_column,width,height):
+    
+    col1, col2 = main_column.columns([0.5, 0.5])
     with col1:
-        start_btn = st.button('⏯️', key='start_btn')
-    # with col2:
-    #     pause_btn = st.button('Pause', key='pause')
-    # with col3:
-    #     resume_btn = st.button('Resume', key='resume')
+        start_btn = main_column.button('⏯️', key='start_btn')
     N = df.shape[0]
-    num_of_cols = len(df.axes[1])
-    rows_until_45sec = df.loc[df['time'] <= float(47)]
-    rows_until_51sec = df.loc[df['time'] <= float(51)]
-    if(num_of_cols) == 2:
-        df = df.loc[len(rows_until_45sec):len(rows_until_51sec)]
-
     burst = 150
     size = burst
     if 'counter' not in st.session_state:
         st.session_state.counter = 0
+   
     if start_btn:
-
         st.session_state.counter = st.session_state.counter+1
         if(st.session_state.counter == 1):
-            controls_column.write("first start")
+          
             for i in range(1, N-burst):
-                st.session_state.start = i
                 step_df = df.iloc[i:burst+i]
-                lines = plot_animation(step_df)
+                lines,x,y = altair_plot(step_df,width,height)
                 line_plot.altair_chart(lines)
                 size = i + burst
                 st.session_state.size1 = size
             line_plot = line_plot.altair_chart(lines)
+            
         if(st.session_state.counter % 2 == 0):
-            for i in range(st.session_state.start, N):
+ 
+            for i in range(st.session_state.size1-burst, N):
                 step_df = df.iloc[0:st.session_state.size1]
-                lines = plot_animation(step_df)
+                lines,x,y = altair_plot(step_df,width,height)
                 line_plot = line_plot.altair_chart(lines)
         else:
-            for i in range(st.session_state.start, N):
-                st.session_state.start = i
+          
+            for i in range(st.session_state.size1-burst, N):
                 step_df = df.iloc[i:size]
-                lines = plot_animation(step_df)
+                lines,x,y = altair_plot(step_df,width,height)
                 line_plot = line_plot.altair_chart(lines)
                 st.session_state.size1 = size
                 size = i + burst
+                if(i==N-burst):
+                    break
                 time.sleep(.0000001)
 
     return st.session_state.counter
-
-    # elif resume_btn:
-    #     print(st.session_state.start)
-    #     for i in range(st.session_state.start, N):
-    #         st.session_state.start = i
-    #         step_df = df.iloc[0:size]
-    #         lines = plot_animation(step_df)
-    #         line_plot = line_plot.altair_chart(lines)
-    #         st.session_state.size1 = size
-    #         size = i + burst
-    #         time.sleep(.0000001)
-
-    # elif pause_btn:
-    #     step_df = df.iloc[0:st.session_state.size1]
-    #     lines = plot_animation(step_df)
-    #     line_plot = line_plot.altair_chart(lines)
 
 
 def sound_modification(sliders_data, amplitude_axis_list, controls_column):

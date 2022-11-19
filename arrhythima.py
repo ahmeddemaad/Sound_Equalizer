@@ -24,26 +24,26 @@ import functions as fn
 
 
 def arrhythima(main_column, controls_column):
-    ''' if 'arrhythmia_slider' not in st.session_state:
-        st.session_state.arrhythmia_slider=1 '''
-    col1, col2 = main_column.columns([1, .001])
+
     ecg = electrocardiogram()
     fs = 360
     time = np.arange(ecg.size) / fs
-
     fourier_x_axis = sc.fft.rfftfreq(len(ecg), (time[1]-time[0]))
     fourier_y_axis = sc.fft.rfft(ecg)
-
     value = controls_column.slider(
         label="Arrhythmia", min_value=0, max_value=10, value=1, key=12)
     points_per_freq = len(fourier_x_axis) / (fourier_x_axis[-1])
-
+    original_y_axis=sc.fft.irfft(fourier_y_axis)
     fourier_y_axis[int(points_per_freq*1):int(points_per_freq * 5)] *= value
-    modified_signal = sc.fft.irfft(fourier_y_axis)
-    df = pd.DataFrame({'time': time, 'amplitude': modified_signal})
-    with col1:
-        lines = fn.altair_plot(df)
-        line_plot = st.altair_chart(lines)
-        fn.dynamic_plot(line_plot, df, controls_column)
 
-  #'''   st.write( st.session_state.arrhythmia_slider) '''
+    modified_signal = sc.fft.irfft(fourier_y_axis)
+    df = pd.DataFrame({'time': time, 'amplitude': original_y_axis,'modified_amplitude':modified_signal})
+    rows_until_45sec = df.loc[df['time'] <= float(45)]
+    rows_until_51sec = df.loc[df['time'] <= float(51)]
+    df = df.loc[len(rows_until_45sec):len(rows_until_51sec)]
+    main_column.empty().write("")
+    main_column.empty().write("")
+    main_column.empty().write("")
+    lines,width,height = fn.altair_plot(df,500,300)
+    line_plot = main_column.altair_chart(lines)
+    fn.dynamic_plot(line_plot, df, controls_column,main_column,width,height)

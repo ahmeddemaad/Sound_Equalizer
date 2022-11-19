@@ -5,7 +5,6 @@ def music_modification(frequency, amplitude, sliders_data,controls_column):
     empty = controls_column.empty()
     empty.empty()
     index_drums = np.where((frequency >= 0) & (frequency < 1000))
-
     for i in index_drums:
         amplitude[i] = amplitude[i]*sliders_data[0]
 
