@@ -46,7 +46,6 @@ def sound_loading(file, speed_rate):
         loaded_sound_file, rate=speed_rate)
     return loaded_sound_file, sampling_rate
 
-
     #-------------------------------------------------------------------processing-------------------------------------------------------------------#
 
 
@@ -99,7 +98,7 @@ def sliders_generation(max_freq_list, main_column, number_of_sliders):
                 st.write(vowels[i])
     return sliders_data
 
-    
+
 def sound_modification(sliders_data, amplitude_axis_list, controls_column):
     controls_column.write('Modified Audio')
     empty = controls_column.empty()
@@ -119,6 +118,7 @@ def inverse_fourier(modified_amplitude_axis_list, phase):
 
 # -------------------------------- plotting
 
+
 def data_preparation(loaded_sound_file, modified_amplitude_axis_list, original_time_axis, ifft_file):
     loaded_sound_file = loaded_sound_file[:len(ifft_file)]
     modified_amplitude_axis_list = modified_amplitude_axis_list[:len(
@@ -129,7 +129,7 @@ def data_preparation(loaded_sound_file, modified_amplitude_axis_list, original_t
     return resulting_df, loaded_sound_file
 
 
-def altair_plot(df,width,height):
+def altair_plot(df, width, height):
 
     lines = alt.Chart(df).mark_line(color='#3182ce').encode(
         x=alt.X('time', axis=alt.Axis(title='Time')),
@@ -141,12 +141,11 @@ def altair_plot(df,width,height):
     figure = lines.encode(y=alt.Y('amplitude', axis=alt.Axis(title='Amplitude'))) | lines.encode(
         y=alt.Y('modified_amplitude', axis=alt.Axis(title='Modified Amplitude')))
 
-    return figure,width,height
+    return figure, width, height
 
 
+def dynamic_plot(line_plot, df, controls_column, main_column, width, height):
 
-def dynamic_plot(line_plot, df, controls_column,main_column,width,height):
-    
     col1, col2 = main_column.columns([0.5, 0.5])
     with col1:
         start_btn = main_column.button('⏯️', key='start_btn')
@@ -155,39 +154,38 @@ def dynamic_plot(line_plot, df, controls_column,main_column,width,height):
     size = burst
     if 'counter' not in st.session_state:
         st.session_state.counter = 0
-   
+
     if start_btn:
         st.session_state.counter = st.session_state.counter+1
         if(st.session_state.counter == 1):
-          
+
             for i in range(1, N-burst):
                 step_df = df.iloc[i:burst+i]
-                lines,x,y = altair_plot(step_df,width,height)
+                lines, x, y = altair_plot(step_df, width, height)
                 line_plot.altair_chart(lines)
                 size = i + burst
                 st.session_state.size1 = size
             line_plot = line_plot.altair_chart(lines)
-            
+
         if(st.session_state.counter % 2 == 0):
- 
+
             for i in range(st.session_state.size1-burst, N):
                 step_df = df.iloc[0:st.session_state.size1]
-                lines,x,y = altair_plot(step_df,width,height)
+                lines, x, y = altair_plot(step_df, width, height)
                 line_plot = line_plot.altair_chart(lines)
         else:
-          
+
             for i in range(st.session_state.size1-burst, N):
                 step_df = df.iloc[i:size]
-                lines,x,y = altair_plot(step_df,width,height)
+                lines, x, y = altair_plot(step_df, width, height)
                 line_plot = line_plot.altair_chart(lines)
                 st.session_state.size1 = size
                 size = i + burst
-                if(i==N-burst):
+                if(i == N-burst):
                     break
                 time.sleep(.0000001)
 
     return st.session_state.counter
-
 
 
 def plot_spectrogram(original_audio, modified_audio, main_column):
